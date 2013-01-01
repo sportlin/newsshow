@@ -1,0 +1,4 @@
+python $HOME/bin/google_appengine/appcfg.py  --help
+python $HOME/bin/google_appengine/appcfg.py --no_cookies update $HOME/workspace-gae/newsshow/src
+
+

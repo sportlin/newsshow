@@ -1,0 +1,15 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>News Index</title>
+</head>
+  <body>
+      {% for item in items %}
+      {% if not forloop.first %}<br/>{% endif %}
+      <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
+      {% if item.imgurl %}<br/><img src="{{ item.imgurl }}"/>{% endif %}
+      {% if not forloop.last %}<br/>{% endif %}
+      {% endfor %}
+  </body>
+</html>
+
