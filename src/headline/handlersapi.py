@@ -8,15 +8,15 @@ import jsonpickle
 
 from . import hlapi
 
-class HeadlineRequest(webapp2.RequestHandler):
+class HeadlineAddRequest(webapp2.RequestHandler):
     def post(self):
         rawdata = self.request.body
-        taskqueue.add(queue_name="default", payload=rawdata, url='/headline/save/')
+        taskqueue.add(queue_name="default", payload=rawdata, url='/headline/add/')
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('Request is accepted.')
 
 
-class HeadlineResponse(webapp2.RequestHandler):
+class HeadlineAddResponse(webapp2.RequestHandler):
 
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'

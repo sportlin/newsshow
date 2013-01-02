@@ -17,8 +17,8 @@ class MainPage(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
 ('/hello/', MainPage),
 ('/configitem/', configmanager.handlers.MainPage),
-('/api/headline/', headline.handlersapi.HeadlineRequest),
-('/headline/save/', headline.handlersapi.HeadlineResponse),
+('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
+('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 ('/', headline.handlers.HomePage),
 ],
                               debug=True)
