@@ -1,9 +1,14 @@
 
 from . import modelapi
 
-def saveItems(items):
-    modelapi.addItems(items)
+def saveItems(datasource, items):
+    modelapi.updateDatasources(datasource, items)
+    modelapi.saveItems(datasource, items)
 
 def getItems():
     return modelapi.getItems()
+
+def getDatasources():
+    datasources = modelapi.getDatasources().values()
+    return datasources
 

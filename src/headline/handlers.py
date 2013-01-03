@@ -8,13 +8,17 @@ from . import hlapi
 class HomePage(webapp2.RequestHandler):
     def _render(self, templateValues):
         self.response.headers['Content-Type'] = 'text/html'
-        path = os.path.join(os.path.dirname(__file__), 'templates', 'index.html')
+        path = os.path.join(os.path.dirname(__file__), 'templates', 'datasources.html')
         self.response.out.write(template.render(path, templateValues))
 
     def get(self):
-        items = hlapi.getItems()
+        datasources = hlapi.getDatasources()
+        datasources = sorted(datasources, key=lambda datasource:
+                                datasource.get('order'))
+        datasources = sorted(datasources, key=lambda datasource:
+                                datasource.get('topic'))
         templateValues = {
-            'items': items,
+            'datasources': datasources,
         }
         self._render(templateValues)
 

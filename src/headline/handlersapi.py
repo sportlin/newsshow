@@ -15,13 +15,13 @@ class HeadlineAddRequest(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('Request is accepted.')
 
-
 class HeadlineAddResponse(webapp2.RequestHandler):
 
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'
         data = jsonpickle.decode(self.request.body)
+        datasource = data['datasource']
         items = data['items']
-        hlapi.saveItems(items)
+        hlapi.saveItems(datasource, items)
         self.response.out.write('Done.')
 
