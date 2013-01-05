@@ -4,21 +4,14 @@
 <title>News Index</title>
 </head>
   <body>
-    <table>
     {% for datasource in datasources %}
-      <tr><td>{{ datasource.source.name }}</td>
-      {% for item in datasource.items %}
-      {% if not forloop.first %}<tr>{% endif %}
-      <td>
+<br/>{{ datasource.source.name }}
+      {% for item in datasource.pages %}
       <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
-      {{ datasource.source.added }}
+      {{ datasource.source.added | utc14duration }}
       {% if item.imgurl %}<br/><img src="{{ item.imgurl }}"/>{% endif %}
-      </td>
-      <tr/>
       {% endfor %}
-      </tr>
     {% endfor %}
-    </table>
   </body>
 </html>
 

@@ -4,6 +4,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'library'))
 
+import templateutil.filters
+
 import configmanager.handlers
 import headline.handlersapi
 import headline.handlers
@@ -13,6 +15,13 @@ class MainPage(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('Hello, webapp World!')
 
+config = {}
+config['webapp2_extras.jinja2'] = {
+    'template_path': os.path.join(os.path.dirname(__file__), 'headline', 'templates'),
+    'filters': {
+        'utc14duration': templateutil.filters.utc14duration
+    },
+}
 
 app = webapp2.WSGIApplication([
 ('/hello/', MainPage),
@@ -21,5 +30,5 @@ app = webapp2.WSGIApplication([
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 ('/', headline.handlers.HomePage),
 ],
-                              debug=True)
+debug=True, config=config)
 

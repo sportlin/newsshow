@@ -34,7 +34,7 @@ def updateDatasources(datasource, items):
     sourceSlug = datasource.get('slug')
     key = _getDatasourcesKey()
     datasources = getDatasources()
-    value = {'source': datasource, 'items': items}
+    value = {'source': datasource, 'pages': items}
     datasources[sourceSlug] = value
     cmapi.saveItem(key, datasources, modelname=LatestItem)
 

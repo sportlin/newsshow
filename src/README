@@ -6,5 +6,6 @@ mkdir $LIBRARY_SRC
 
 ln -s $UTIL_PROJECT_SRC/jsonpickle $LIBRARY_SRC/jsonpickle
 ln -s $FUNCTION_PROJECT_SRC/commonutil $LIBRARY_SRC/commonutil
+ln -s $FUNCTION_PROJECT_SRC/templateutil $LIBRARY_SRC/templateutil
 ln -s $FUNCTION_PROJECT_SRC/configmanager $LIBRARY_SRC/configmanager
 

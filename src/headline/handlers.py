@@ -1,15 +1,20 @@
 import os
 
-from google.appengine.ext.webapp import template
 import webapp2
+from webapp2_extras import jinja2
 
 from . import hlapi
 
 class HomePage(webapp2.RequestHandler):
+
+    @webapp2.cached_property
+    def jinja2(self):
+        return jinja2.get_jinja2(app=self.app)
+
     def _render(self, templateValues):
         self.response.headers['Content-Type'] = 'text/html'
-        path = os.path.join(os.path.dirname(__file__), 'templates', 'datasources.html')
-        self.response.out.write(template.render(path, templateValues))
+        content = self.jinja2.render_template('datasources.html', **templateValues)
+        self.response.out.write(content)
 
     def get(self):
         datasources = hlapi.getDatasources()
