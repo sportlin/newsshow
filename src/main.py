@@ -28,7 +28,9 @@ app = webapp2.WSGIApplication([
 ('/configitem/', configmanager.handlers.MainPage),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
-('/', headline.handlers.HomePage),
+('/', headline.handlers.ListPage),
+('/i/', headline.handlers.IndexPage),
+('/l/', headline.handlers.ListPage),
 ],
 debug=True, config=config)
 

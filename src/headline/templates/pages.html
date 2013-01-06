@@ -1,0 +1,15 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>News Index</title>
+</head>
+  <body>
+      {% for page in pages %}
+      {% if not loop.first %}<br/>{% endif %}
+      <a href="{{ page.url }}" target="_blank">{{ page.title }}</a>
+      {{ page.source.name }} {{ page.source.added | utc14duration }}
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+  </body>
+</html>
+
