@@ -13,17 +13,13 @@ class IndexPage(webapp2.RequestHandler):
 
     def _render(self, templateValues):
         self.response.headers['Content-Type'] = 'text/html'
-        content = self.jinja2.render_template('datasources.html', **templateValues)
+        content = self.jinja2.render_template('topics.html', **templateValues)
         self.response.out.write(content)
 
     def get(self):
-        datasources = hlapi.getDatasources()
-        datasources = sorted(datasources, key=lambda datasource:
-                                datasource.get('order'))
-        datasources = sorted(datasources, key=lambda datasource:
-                                datasource.get('topic'))
+        topics = hlapi.getTopics()
         templateValues = {
-            'datasources': datasources,
+            'topics': topics,
         }
         self._render(templateValues)
 

@@ -1,0 +1,23 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>News Index</title>
+</head>
+  <body>
+{% for topic in topics %}
+{% if not loop.first%}<hr/>{% endif %}
+{% if topic.name %}{{ topic.name }}<br/>{% endif %}
+  {% for group in topic.groups %}
+{% if not loop.first %}<br/>{% endif %}
+    {% for source in group.sources %}
+      {% for page in source.pages %}
+<br/>{{ source.name }}
+<a href="{{ page.url }}" target="_blank">{{ page.title }}</a>
+{{ source.added | utc14duration }}
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+{% endfor %}
+  </body>
+</html>
+

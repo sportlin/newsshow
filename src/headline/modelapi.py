@@ -8,6 +8,9 @@ class LatestItem(configmanager.models.ConfigItem):
 
 cmapi.registerModel(LatestItem)
 
+def getDisplayConfig():
+    return cmapi.getItemValue('display.structure', {})
+
 def _getItemsKey():
     return 'Headlines'
 
