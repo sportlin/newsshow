@@ -23,7 +23,7 @@ def saveDatasourceHistory(datasource, items):
     data['pages'] = copy.deepcopy(items)
 
     key = _getItemsKey()
-    latestItems = getItems()
+    latestItems = getDatasourceHistory()
     latestItems.insert(0, data)
     cmapi.saveItem(key, latestItems, modelname=LatestItem)
 
