@@ -1,15 +1,22 @@
 import copy
+import datetime
 import logging
 
 from commonutil import stringutil
+from commonutil import dateutil
+import globalconfig
 from . import modelapi
 
 def saveItems(datasource, items):
     modelapi.updateDatasources(datasource, items)
-    modelapi.saveItems(datasource, items)
+    modelapi.saveDatasourceHistory(datasource, items)
 
-def getItems():
-    return modelapi.getItems()
+def getDatasourceHistory():
+    latestHours = globalconfig.getSiteLatestHours()
+    startTime = datetime.datetime.utcnow() - datetime.timedelta(hours=latestHours)
+    strstart = dateutil.getDateAs14(startTime)
+    return [ item for item in modelapi.getDatasourceHistory()
+                if item.get('added', '') >= strstart]
 
 # topic/group/source/page
 def getTopics():
@@ -18,15 +25,15 @@ def getTopics():
     groupConfigs = displayConfig.get('group', {})
     sourceConfigs = displayConfig.get('source', {})
 
-    datasources = modelapi.getDatasources().values()
+    datasources = modelapi.getDatasources()
 
     # populate attr (topicorder/topic/grouporder/group/sourceorder) for datasoure
     for datasource in datasources:
-        topicSlug = datasource.get('source').get('topic')
-        sourceSlug = datasource.get('source').get('slug')
+        topicSlug = datasource.get('topic')
+        sourceSlug = datasource.get('slug')
 
         topicConfig = topicConfigs.get(topicSlug)
-        datasource['topic'] = datasource.get('source').get('topic')
+        datasource['topic'] = datasource.get('topic')
         if topicSlug and topicConfig:
             datasource['topicorder'] = topicConfig.get('order')
         else:
@@ -66,7 +73,7 @@ def getTopics():
     lastGroup = None
     topics = []
     for datasource in datasources:
-        topicSlug = datasource.get('source').get('topic')
+        topicSlug = datasource.get('topic')
         if not lastTopic or topicSlug != lastTopic['slug']:
             topicConfig = topicConfigs.get(topicSlug)
             if topicConfig:
@@ -89,9 +96,7 @@ def getTopics():
             lastGroup['slug'] = groupSlug
             lastGroup['sources'] = []
             lastTopic['groups'].append(lastGroup)
-        source = copy.deepcopy(datasource.get('source'))
-        source['pages'] = datasource['pages']
-        lastGroup['sources'].append(source)
+        lastGroup['sources'].append(datasource)
 
     return topics
 

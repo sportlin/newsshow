@@ -4,10 +4,13 @@
 <title>News Index</title>
 </head>
   <body>
-      {% for page in pages %}
+      {% for datasource in datasources %}
+      {% if not loop.first %}<br/>{% endif %}
+      {% for page in datasource.pages %}
       {% if not loop.first %}<br/>{% endif %}
       <a href="{{ page.url }}" target="_blank">{{ page.title }}</a>
-      {{ page.source.name }} {{ page.source.added | utc14duration }}
+      {{ datasource.name }} {{ datasource.added | utc14duration }}
+      {% endfor %}
       {% if not loop.last %}<br/>{% endif %}
       {% endfor %}
   </body>

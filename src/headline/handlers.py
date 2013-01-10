@@ -35,11 +35,9 @@ class ListPage(webapp2.RequestHandler):
         self.response.out.write(content)
 
     def get(self):
-        pages = hlapi.getItems()
-        pages = sorted(pages, key=lambda page:
-                                page.get('added'), reverse=True)
+        datasources = hlapi.getDatasourceHistory()
         templateValues = {
-            'pages': pages,
+            'datasources': datasources,
         }
         self._render(templateValues)
 
