@@ -9,9 +9,12 @@
 {% if topic.name %}{{ topic.name }}<br/>{% endif %}
   {% for group in topic.groups %}
 {% if not loop.first %}<br/>{% endif %}
-    {% for source in group.sources %}
+    {% if group.name %}{{ group.name }}<br/>{% endif %}
+    {% for source in group.datasources %}
+      {% if not loop.first %}<br/>{% endif %}
       {% for page in source.pages %}
-<br/>{{ source.name }}
+{% if not loop.first %}<br/>{% endif %}
+{{ source.name }}
 <a href="{{ page.url }}" target="_blank">{{ page.title }}</a>
 {{ source.added | utc14duration }}
       {% endfor %}

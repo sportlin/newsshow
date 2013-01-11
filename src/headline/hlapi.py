@@ -18,85 +18,86 @@ def getDatasourceHistory():
     return [ item for item in modelapi.getDatasourceHistory()
                 if item.get('added', '') >= strstart]
 
+"""
+Judge wether all criterions are matched.
+"""
+def _isTagsMatch(criterionTags, tags):
+    matched = True
+    for tag in criterionTags:
+        if tag not in tags:
+            matched = False
+            break
+    return matched
+
+def _getDatasourcesByTags(datasources, tags):
+    result = []
+    for datasource in datasources:
+        datasourceTags = datasource.get('tags', [])
+        if not tags:
+            continue
+        if not _isTagsMatch(tags, datasourceTags):
+            continue
+        result.append(copy.deepcopy(datasource))
+    return result
+
+def _getUnmatchedDatasources(datasources, items):
+    result = []
+    for datasource in datasources:
+        datasourceTags = datasource.get('tags', [])
+        matched = False
+        for item in items:
+            tags = item.get('tags')
+            if not tags:
+                continue
+            if _isTagsMatch(tags, datasourceTags):
+                matched = True
+                break
+        if not matched:
+            result.append(copy.deepcopy(datasource))
+    return result
+
 # topic/group/source/page
 def getTopics():
-    displayConfig = modelapi.getDisplayConfig()
-    topicConfigs = displayConfig.get('topic', {})
-    groupConfigs = displayConfig.get('group', {})
-    sourceConfigs = displayConfig.get('source', {})
-
     datasources = modelapi.getDatasources()
 
-    # populate attr (topicorder/topic/grouporder/group/sourceorder) for datasoure
-    for datasource in datasources:
-        topicSlug = datasource.get('topic')
-        sourceSlug = datasource.get('slug')
+    displayConfig = modelapi.getDisplayConfig()
+    logging.info('displayConfig: %s.' % (displayConfig, ))
+    showUnknown = displayConfig.get('show.unknown', True)
+    topics = copy.deepcopy(displayConfig.get('topics', []))
+    for topic in topics:
+        logging.info('topic: %s.' % (topic, ))
+        topicTags = topic.get('tags')
+        if not topicTags:
+            continue
 
-        topicConfig = topicConfigs.get(topicSlug)
-        datasource['topic'] = datasource.get('topic')
-        if topicSlug and topicConfig:
-            datasource['topicorder'] = topicConfig.get('order')
-        else:
-            datasource['topicorder'] = stringutil.getMaxOrder()
+        topicDatasources = _getDatasourcesByTags(datasources, topicTags)
+        logging.info('topicDatasources: %s.' % (topicDatasources, ))
+        if not topicDatasources:
+            continue
 
-        # process source first, then datasource has group attr
-        sourceconfig = sourceConfigs.get(sourceSlug)
-        if sourceconfig:
-            sourcegroup = sourceconfig.get('group')
-            if sourcegroup:
-                datasource['group'] = sourcegroup
-            sourceorder = sourceconfig.get('order')
-            if sourceorder:
-                datasource['group'] = sourceorder
-        if not datasource.get('sourceorder'):
-            datasource['sourceorder'] = stringutil.getMaxOrder()
+        groups = topic.get('groups', [])
+        for group in groups:
+            groupTags = group.get('tags')
+            if not groupTags:
+                continue
+            groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
+            if not groupDatasources:
+                continue
+            group['datasources'] = groupDatasources
 
-        groupSlug = datasource.get('group')
-        groupConfig = groupConfigs.get(groupSlug)
-        if groupSlug and groupConfig:
-            datasource['grouporder'] = groupConfig.get('order')
-        else:
-            datasource['grouporder'] = stringutil.getMaxOrder()
+        if showUnknown:
+            unmatched = _getUnmatchedDatasources(topicDatasources, groups)
+            if unmatched:
+                unknownGroup = {'name': '', 'datasources': unmatched}
+                groups.append(unknownGroup)
 
-    datasources = sorted(datasources, key=lambda datasource:
-                            datasource.get('sourceorder'))
-    datasources = sorted(datasources, key=lambda datasource:
-                            datasource.get('group'))
-    datasources = sorted(datasources, key=lambda datasource:
-                            datasource.get('grouporder'))
-    datasources = sorted(datasources, key=lambda datasource:
-                            datasource.get('topic'))
-    datasources = sorted(datasources, key=lambda datasource:
-                            datasource.get('topicorder'))
-
-    lastTopic = None
-    lastGroup = None
-    topics = []
-    for datasource in datasources:
-        topicSlug = datasource.get('topic')
-        if not lastTopic or topicSlug != lastTopic['slug']:
-            topicConfig = topicConfigs.get(topicSlug)
-            if topicConfig:
-                lastTopic = copy.deepcopy(topicConfig)
-            else:
-                lastTopic = {}
-            lastTopic['slug'] = topicSlug
-            lastTopic['groups'] = []
-            topics.append(lastTopic)
-
-            lastGroup = None
-
-        groupSlug = datasource.get('group')
-        if not lastGroup or groupSlug != lastGroup['slug']:
-            groupConfig = groupConfigs.get(groupSlug)
-            if groupConfig:
-                lastGroup = copy.deepcopy(groupConfig)
-            else:
-                lastGroup = {}
-            lastGroup['slug'] = groupSlug
-            lastGroup['sources'] = []
-            lastTopic['groups'].append(lastGroup)
-        lastGroup['sources'].append(datasource)
+    if showUnknown:
+        unmatched = _getUnmatchedDatasources(datasources, topics)
+        if unmatched:
+            unknownTopic = {'name': '', 'groups': [
+                {'name': '', 'datasources': unmatched}
+            ]}
+            topics.append(unknownTopic)
 
     return topics
 
