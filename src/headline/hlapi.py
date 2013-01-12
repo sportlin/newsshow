@@ -59,7 +59,7 @@ def _getUnmatchedDatasources(datasources, items):
     return result
 
 def _sortDatasources(datasources):
-    return sorted(datasources, lambda source:
+    return sorted(datasources, key=lambda source:
                 source.get('order') if source.get('order')
                 else stringutil.getMaxOrder())
 
@@ -86,7 +86,7 @@ def getTopics():
                 groups = copy.deepcopy(defaultGroups)
             else:
                 groups = []
-            topic['groups'] = groups
+        topicGroups = []
         for group in groups:
             groupTags = group.get('tags')
             if not groupTags:
@@ -95,12 +95,14 @@ def getTopics():
             if not groupDatasources:
                 continue
             group['datasources'] = _sortDatasources(groupDatasources)
+            topicGroups.append(group)
 
         if showUnknown:
             unmatched = _getUnmatchedDatasources(topicDatasources, groups)
             if unmatched:
                 unknownGroup = {'name': '', 'datasources': unmatched}
-                groups.append(unknownGroup)
+                topicGroups.append(unknownGroup)
+        topic['groups'] = topicGroups
 
     if showUnknown:
         unmatched = _getUnmatchedDatasources(datasources, topics)
