@@ -54,28 +54,39 @@ def _getUnmatchedDatasources(datasources, items):
                 break
         if not matched:
             result.append(copy.deepcopy(datasource))
+    if result:
+        result = _sortDatasources(result)
     return result
+
+def _sortDatasources(datasources):
+    return sorted(datasources, lambda source:
+                source.get('order') if source.get('order')
+                else stringutil.getMaxOrder())
 
 # topic/group/source/page
 def getTopics():
     datasources = modelapi.getDatasources()
 
     displayConfig = modelapi.getDisplayConfig()
-    logging.info('displayConfig: %s.' % (displayConfig, ))
     showUnknown = displayConfig.get('show.unknown', True)
+    defaultGroups = displayConfig.get('groups')
     topics = copy.deepcopy(displayConfig.get('topics', []))
     for topic in topics:
-        logging.info('topic: %s.' % (topic, ))
         topicTags = topic.get('tags')
         if not topicTags:
             continue
 
         topicDatasources = _getDatasourcesByTags(datasources, topicTags)
-        logging.info('topicDatasources: %s.' % (topicDatasources, ))
         if not topicDatasources:
             continue
 
-        groups = topic.get('groups', [])
+        groups = topic.get('groups')
+        if groups is None:
+            if defaultGroups:
+                groups = copy.deepcopy(defaultGroups)
+            else:
+                groups = []
+            topic['groups'] = groups
         for group in groups:
             groupTags = group.get('tags')
             if not groupTags:
@@ -83,7 +94,7 @@ def getTopics():
             groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
             if not groupDatasources:
                 continue
-            group['datasources'] = groupDatasources
+            group['datasources'] = _sortDatasources(groupDatasources)
 
         if showUnknown:
             unmatched = _getUnmatchedDatasources(topicDatasources, groups)

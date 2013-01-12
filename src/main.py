@@ -21,6 +21,9 @@ config['webapp2_extras.jinja2'] = {
     'filters': {
         'utc14duration': templateutil.filters.utc14duration
     },
+    'environment_args': {
+        'extensions': ['jinja2.ext.loopcontrols'],
+    },
 }
 
 app = webapp2.WSGIApplication([

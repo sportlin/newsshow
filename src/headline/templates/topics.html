@@ -5,9 +5,11 @@
 </head>
   <body>
 {% for topic in topics %}
+  {% if not topic.groups %} {% continue %} {% endif %}
 {% if not loop.first%}<hr/>{% endif %}
 {% if topic.name %}{{ topic.name }}<br/>{% endif %}
   {% for group in topic.groups %}
+    {% if not group.datasources %} {% continue %} {% endif %}
 {% if not loop.first %}<br/>{% endif %}
     {% if group.name %}{{ group.name }}<br/>{% endif %}
     {% for source in group.datasources %}
