@@ -10,6 +10,8 @@ import configmanager.handlers
 import headline.handlersapi
 import headline.handlers
 
+import globalconfig
+
 class MainPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
@@ -24,6 +26,7 @@ config['webapp2_extras.jinja2'] = {
     'environment_args': {
         'extensions': ['jinja2.ext.loopcontrols'],
     },
+    'globals': globalconfig.getSiteConfig(),
 }
 
 app = webapp2.WSGIApplication([

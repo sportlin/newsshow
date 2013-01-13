@@ -3,6 +3,13 @@ import os
 
 from configmanager import cmapi
 
+def getSiteConfig():
+    return cmapi.getItemValue('site',
+        {
+            'site': {'name': 'Site Name'},
+        }
+    )
+
 def getSiteLatestHours():
     site = cmapi.getItemValue('site', {})
     hours = site.get('latest.hours', 24)

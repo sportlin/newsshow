@@ -110,6 +110,7 @@ def getTopics():
                 }
                 topicGroups.append(unknownGroup)
         resultTopic = {}
+        resultTopic['slug'] = topic.get('slug')
         resultTopic['name'] = topic.get('name')
         resultTopic['groups'] = topicGroups
         resultTopics.append(resultTopic)
