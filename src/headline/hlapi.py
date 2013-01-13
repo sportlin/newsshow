@@ -70,7 +70,8 @@ def getTopics():
     displayConfig = modelapi.getDisplayConfig()
     showUnknown = displayConfig.get('show.unknown', True)
     defaultGroups = displayConfig.get('groups')
-    topics = copy.deepcopy(displayConfig.get('topics', []))
+    topics = displayConfig.get('topics', [])
+    resultTopics = []
     for topic in topics:
         topicTags = topic.get('tags')
         if not topicTags:
@@ -79,7 +80,6 @@ def getTopics():
         topicDatasources = _getDatasourcesByTags(datasources, topicTags)
         if not topicDatasources:
             continue
-
         groups = topic.get('groups')
         if groups is None:
             if defaultGroups:
@@ -102,7 +102,10 @@ def getTopics():
             if unmatched:
                 unknownGroup = {'name': '', 'datasources': unmatched}
                 topicGroups.append(unknownGroup)
-        topic['groups'] = topicGroups
+        resultTopic = {}
+        resultTopic['name'] = topic.get('name')
+        resultTopic['groups'] = topicGroups
+        resultTopics.append(resultTopic)
 
     if showUnknown:
         unmatched = _getUnmatchedDatasources(datasources, topics)
@@ -110,9 +113,8 @@ def getTopics():
             unknownTopic = {'name': '', 'groups': [
                 {'name': '', 'datasources': unmatched}
             ]}
-            topics.append(unknownTopic)
-
-    return topics
+            resultTopics.append(unknownTopic)
+    return resultTopics
 
 def cleanData():
     datasourceDays = globalconfig.getDatasourceDays()

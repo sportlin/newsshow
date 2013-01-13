@@ -33,9 +33,9 @@ app = webapp2.WSGIApplication([
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 ('/headline/clean/request/', headline.handlersapi.HeadlineCleanRequest),
 ('/headline/clean/', headline.handlersapi.HeadlineCleanResponse),
-('/', headline.handlers.ListPage),
-('/i/', headline.handlers.IndexPage),
 ('/l/', headline.handlers.ListPage),
+('/i/', headline.handlers.IndexPage),
+('/', headline.handlers.IndexPage),
 ],
 debug=True, config=config)
 
