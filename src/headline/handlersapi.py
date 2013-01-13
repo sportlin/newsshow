@@ -9,6 +9,7 @@ import jsonpickle
 from . import hlapi
 
 class HeadlineAddRequest(webapp2.RequestHandler):
+
     def post(self):
         rawdata = self.request.body
         taskqueue.add(queue_name="default", payload=rawdata, url='/headline/add/')
@@ -23,5 +24,20 @@ class HeadlineAddResponse(webapp2.RequestHandler):
         datasource = data['datasource']
         items = data['items']
         hlapi.saveItems(datasource, items)
+        self.response.out.write('Done.')
+
+class HeadlineCleanRequest(webapp2.RequestHandler):
+
+    def get(self):
+        taskqueue.add(queue_name="default", url='/headline/clean/')
+        self.response.headers['Content-Type'] = 'text/plain'
+        self.response.out.write('Request is accepted.')
+
+class HeadlineCleanResponse(webapp2.RequestHandler):
+
+    def post(self):
+        self.response.headers['Content-Type'] = 'text/plain'
+        hlapi.cleanData()
+        logging.info('Data cleaned.')
         self.response.out.write('Done.')
 

@@ -1,0 +1,6 @@
+cron:
+- description: Send requests to clean data
+  url: /headline/clean/request/
+  schedule: every day 00:01
+  timezone: America/Los_Angeles
+

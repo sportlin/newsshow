@@ -114,3 +114,9 @@ def getTopics():
 
     return topics
 
+def cleanData():
+    datasourceDays = globalconfig.getDatasourceDays()
+    datasourceHistoryDays = globalconfig.getDatasourceHistoryDays()
+    modelapi.cleanDatasources(datasourceDays)
+    modelapi.cleanDatasourceHistory(datasourceHistoryDays)
+
