@@ -83,7 +83,7 @@ def getTopics():
         groups = topic.get('groups')
         if groups is None:
             if defaultGroups:
-                groups = copy.deepcopy(defaultGroups)
+                groups = defaultGroups
             else:
                 groups = []
         topicGroups = []
@@ -94,13 +94,20 @@ def getTopics():
             groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
             if not groupDatasources:
                 continue
-            group['datasources'] = _sortDatasources(groupDatasources)
-            topicGroups.append(group)
+            topicGroup = {}
+            topicGroup['slug'] = group.get('slug')
+            topicGroup['name'] = group.get('name')
+            topicGroup['datasources'] = _sortDatasources(groupDatasources)
+            topicGroups.append(topicGroup)
 
         if showUnknown:
             unmatched = _getUnmatchedDatasources(topicDatasources, groups)
             if unmatched:
-                unknownGroup = {'name': '', 'datasources': unmatched}
+                unknownGroup = {
+                    'slug': 'unknown',
+                    'name': '',
+                    'datasources': unmatched,
+                }
                 topicGroups.append(unknownGroup)
         resultTopic = {}
         resultTopic['name'] = topic.get('name')
@@ -110,8 +117,15 @@ def getTopics():
     if showUnknown:
         unmatched = _getUnmatchedDatasources(datasources, topics)
         if unmatched:
-            unknownTopic = {'name': '', 'groups': [
-                {'name': '', 'datasources': unmatched}
+            unknownTopic = {
+                'slug': 'unknown',
+                'name': '',
+                'groups': [
+                    {
+                        'slug': 'unknown',
+                        'name': '',
+                        'datasources': unmatched,
+                    }
             ]}
             resultTopics.append(unknownTopic)
     return resultTopics
