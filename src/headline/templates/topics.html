@@ -20,11 +20,11 @@
 <div class="tab-content">
 {% for topic in topics %}
     <div class="tab-pane{% if loop.first %} active{% endif %}" id="topic{{ loop.index }}">
-<table class="table table-bordered">
   {% for group in topic.groups %}
-   <tr><td rowspan="{{ group.datasources|length }}">{% if group.name %}{{ group.name }}{% else %}&nbsp;{% endif %}</td>
+<table class="table table-bordered table-condensed">
+   <tr class="info"><td colspan="2">{% if group.name %}{{ group.name }}{% else %}&nbsp;{% endif %}</td><tr/>
     {% for source in group.datasources %}
-      {% if not loop.first %}<tr>{% endif %}
+      <tr>
       <td>{{ source.name }}</td><td>
       {% for page in source.pages %}
 {% if not loop.first %}<br/>{% endif %}
@@ -34,8 +34,8 @@
 </td>
 </tr>
     {% endfor %}
-  {% endfor %}
 </table/>
+  {% endfor %}
 </div>
 {% endfor %}
     </div>
