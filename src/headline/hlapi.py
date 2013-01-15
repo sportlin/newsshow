@@ -97,7 +97,8 @@ def getTopics():
             topicGroup = {}
             topicGroup['slug'] = group.get('slug')
             topicGroup['name'] = group.get('name')
-            topicGroup['datasources'] = _sortDatasources(groupDatasources)
+            topicGroup['datasources'] = _sortDatasources(groupDatasources,
+                                            orderField='added', reverse=True)
             topicGroups.append(topicGroup)
 
         if showUnknown:
