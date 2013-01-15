@@ -16,12 +16,12 @@ def getSiteLatestHours():
     return hours
 
 def getDatasourceHistoryDays():
-    site = cmapi.getItemValue('site', {})
+    site = cmapi.getItemValue('archive', {})
     days = site.get('datasource.history.days', 7)
     return days
 
 def getDatasourceDays():
-    site = cmapi.getItemValue('site', {})
+    site = cmapi.getItemValue('archive', {})
     days = site.get('datasource.days', 30)
     return days
 

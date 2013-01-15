@@ -55,13 +55,13 @@ def _getUnmatchedDatasources(datasources, items):
         if not matched:
             result.append(copy.deepcopy(datasource))
     if result:
-        result = _sortDatasources(result)
+        result = _sortDatasources(result, orderField='added', reverse=True)
     return result
 
-def _sortDatasources(datasources):
+def _sortDatasources(datasources, orderField='order', reverse=False):
     return sorted(datasources, key=lambda source:
-                source.get('order') if source.get('order')
-                else stringutil.getMaxOrder())
+                source.get(orderField) if source.get(orderField)
+                else stringutil.getMaxOrder(), reverse=reverse)
 
 # topic/group/source/page
 def getTopics():
@@ -134,6 +134,12 @@ def getTopics():
 def cleanData():
     datasourceDays = globalconfig.getDatasourceDays()
     datasourceHistoryDays = globalconfig.getDatasourceHistoryDays()
-    modelapi.cleanDatasources(datasourceDays)
-    modelapi.cleanDatasourceHistory(datasourceHistoryDays)
+    logging.info('Datasource days: %s.' % (datasourceDays, ))
+    if datasourceDays > 0:
+        modelapi.cleanDatasources(datasourceDays)
+        logging.info('Datasource cleaned.')
+    logging.info('Datasource history days: %s.' % (datasourceHistoryDays, ))
+    if datasourceHistoryDays > 0:
+        modelapi.cleanDatasourceHistory(datasourceHistoryDays)
+        logging.info('Datasource history cleaned.')
 

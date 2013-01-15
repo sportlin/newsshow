@@ -38,6 +38,5 @@ class HeadlineCleanResponse(webapp2.RequestHandler):
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'
         hlapi.cleanData()
-        logging.info('Data cleaned.')
         self.response.out.write('Done.')
 
