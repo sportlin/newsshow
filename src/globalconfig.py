@@ -15,6 +15,11 @@ def getSiteLatestHours():
     hours = site.get('latest.hours', 24)
     return hours
 
+def getTopicHistoryHours():
+    site = cmapi.getItemValue('site', {})
+    hours = site.get('topic.hours', 24)
+    return hours
+
 def getDatasourceHistoryDays():
     site = cmapi.getItemValue('archive', {})
     days = site.get('datasource.history.days', 7)

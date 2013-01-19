@@ -7,16 +7,83 @@ from commonutil import dateutil
 import globalconfig
 from . import modelapi
 
+_MOCK_ALL_TOPIC_SLUG = 'all'
+
 def saveItems(datasource, items):
+    displayConfig = modelapi.getDisplayConfig()
+    topics = displayConfig.get('topics', [])
     modelapi.updateDatasources(datasource, items)
-    modelapi.saveDatasourceHistory(datasource, items)
+    _addTopicPages(_MOCK_ALL_TOPIC_SLUG, datasource, items)
+    _addTopicsPages(topics, datasource, items)
+
+def _addTopicPages(topicSlug, datasource, items):
+    historyHours = globalconfig.getTopicHistoryHours()
+    savedTopic = modelapi.getTopicHistory(topicSlug)
+
+    pages = savedTopic.get('pages')
+    if pages is None:
+        pages = []
+        savedTopic['pages'] = pages
+
+    # clean old pages
+    strStart = dateutil.getHoursAs14(historyHours)
+    for i in range(len(pages)):
+        pageSource = pages[i].get('source')
+        if not pageSource or pageSource.get('added') < strStart:
+            del pages[i]
+
+    for item in items:
+        url = item.get('url')
+        if not url:
+            continue
+
+        # remove old duplicated page
+        foundIndex = -1
+        for i in range(len(pages)):
+            page = pages[i]
+            if page.get('url') == url:
+                foundIndex = i
+                break
+        if foundIndex >= 0:
+            del pages[foundIndex]
+
+        # insert the latest page at top
+        data = {
+            'page': copy.deepcopy(item),
+            'source': copy.deepcopy(datasource),
+        }
+        pages.insert(0, data)
+
+    modelapi.saveTopicHistory(topicSlug, savedTopic)
+
+def _addTopicsPages(topics, datasource, items):
+    datasourceTags = datasource.get('tags', [])
+    for topic in topics:
+        topicSlug = topic.get('slug')
+        if not topicSlug:
+            continue
+        topicTags = topic.get('tags')
+        if not topicTags:
+            continue
+        if not _isTagsMatch(topicTags, datasourceTags):
+            continue
+        _addTopicPages(topicSlug, datasource, items)
+
+def getPagesHistory():
+    topic = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
+    if not topic:
+        return []
+    pages = topic.get('pages')
+    if pages is None:
+        return []
+    return pages
 
 def getDatasourceHistory():
     latestHours = globalconfig.getSiteLatestHours()
     startTime = datetime.datetime.utcnow() - datetime.timedelta(hours=latestHours)
     strstart = dateutil.getDateAs14(startTime)
     return [ item for item in modelapi.getDatasourceHistory()
-                if item.get('added', '') >= strstart]
+                if item.get('added', '') >= strstart ]
 
 """
 Judge wether all criterions are matched.

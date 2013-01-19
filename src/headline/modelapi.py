@@ -1,6 +1,6 @@
 import copy
 import datetime
-
+import logging
 
 from commonutil import dateutil
 import configmanager.models
@@ -9,7 +9,11 @@ from configmanager import cmapi
 class LatestItem(configmanager.models.ConfigItem):
     pass
 
+class TopicHistory(configmanager.models.ConfigItem):
+    pass
+
 cmapi.registerModel(LatestItem)
+cmapi.registerModel(TopicHistory)
 
 def getDisplayConfig():
     return cmapi.getItemValue('display.structure', {})
@@ -76,4 +80,16 @@ def cleanDatasourceHistory(days):
                     if datasource.get('added') >= strStart]
     if len(cleanedLatestItems) != len(latestItems):
         cmapi.saveItem(key, cleanedLatestItems, modelname=LatestItem)
+
+def _getTopicHistoryKey(topicSlug):
+    return topicSlug
+
+def getTopicHistory(topicSlug):
+    key = _getTopicHistoryKey(topicSlug)
+    items = cmapi.getItemValue(key, {}, modelname=TopicHistory)
+    return items
+
+def saveTopicHistory(topicSlug, value):
+    key = _getTopicHistoryKey(topicSlug)
+    cmapi.saveItem(key, value, modelname=TopicHistory)
 

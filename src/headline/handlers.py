@@ -31,13 +31,13 @@ class ListPage(webapp2.RequestHandler):
 
     def _render(self, templateValues):
         self.response.headers['Content-Type'] = 'text/html'
-        content = self.jinja2.render_template('pages.html', **templateValues)
+        content = self.jinja2.render_template('history.html', **templateValues)
         self.response.out.write(content)
 
     def get(self):
-        datasources = hlapi.getDatasourceHistory()
+        pages = hlapi.getPagesHistory()
         templateValues = {
-            'datasources': datasources,
+            'pages': pages,
         }
         self._render(templateValues)
 
