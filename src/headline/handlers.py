@@ -5,7 +5,7 @@ from webapp2_extras import jinja2
 
 from . import hlapi
 
-class IndexPage(webapp2.RequestHandler):
+class Topics(webapp2.RequestHandler):
 
     @webapp2.cached_property
     def jinja2(self):
@@ -23,7 +23,7 @@ class IndexPage(webapp2.RequestHandler):
         }
         self._render(templateValues)
 
-class ListPage(webapp2.RequestHandler):
+class PageHistory(webapp2.RequestHandler):
 
     @webapp2.cached_property
     def jinja2(self):
@@ -35,9 +35,27 @@ class ListPage(webapp2.RequestHandler):
         self.response.out.write(content)
 
     def get(self):
-        pages = hlapi.getPagesHistory()
+        pages = hlapi.getPageHistory()
         templateValues = {
             'pages': pages,
+        }
+        self._render(templateValues)
+
+class Datasources(webapp2.RequestHandler):
+
+    @webapp2.cached_property
+    def jinja2(self):
+        return jinja2.get_jinja2(app=self.app)
+
+    def _render(self, templateValues):
+        self.response.headers['Content-Type'] = 'text/html'
+        content = self.jinja2.render_template('datasources.html', **templateValues)
+        self.response.out.write(content)
+
+    def get(self):
+        datasources = hlapi.getDatasources()
+        templateValues = {
+            'datasources': datasources,
         }
         self._render(templateValues)
 

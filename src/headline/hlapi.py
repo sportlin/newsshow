@@ -69,7 +69,7 @@ def _addTopicsPages(topics, datasource, items):
             continue
         _addTopicPages(topicSlug, datasource, items)
 
-def getPagesHistory():
+def getPageHistory():
     topic = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
     if not topic:
         return []
@@ -78,12 +78,10 @@ def getPagesHistory():
         return []
     return pages
 
-def getDatasourceHistory():
-    latestHours = globalconfig.getSiteLatestHours()
-    startTime = datetime.datetime.utcnow() - datetime.timedelta(hours=latestHours)
-    strstart = dateutil.getDateAs14(startTime)
-    return [ item for item in modelapi.getDatasourceHistory()
-                if item.get('added', '') >= strstart ]
+def getDatasources():
+    datasources = modelapi.getDatasources()
+    datasources = sorted(datasources, key=lambda datasource: datasource.get('added'), reverse=True)
+    return datasources
 
 """
 Judge wether all criterions are matched.

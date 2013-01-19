@@ -1,0 +1,18 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>Datasources</title>
+</head>
+  <body>
+      {% for datasource in datasources %}
+      {% if not loop.first %}<br/>{% endif %}
+      {% for page in datasource.pages %}
+      {% if not loop.first %}<br/>{% endif %}
+      <a href="{{ page.url }}" target="_blank">{{ page.title }}</a>
+      {{ datasource.name }} {{ datasource.added | utc14duration }}
+      {% endfor %}
+      {% if not loop.last %}<br/>{% endif %}
+      {% endfor %}
+  </body>
+</html>
+
