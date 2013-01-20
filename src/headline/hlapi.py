@@ -38,13 +38,6 @@ def _addTopicPages(topic, datasource, items):
         pages = []
         savedTopic['pages'] = pages
 
-    # clean old pages
-    strStart = dateutil.getHoursAs14(historyHours)
-    for i in range(len(pages)):
-        pageSource = pages[i].get('source')
-        if not pageSource or pageSource.get('added') < strStart:
-            del pages[i]
-
     for item in items:
         url = item.get('url')
         if not url:
@@ -54,7 +47,7 @@ def _addTopicPages(topic, datasource, items):
         foundIndex = -1
         for i in range(len(pages)):
             page = pages[i]
-            if page.get('url') == url:
+            if page['page'].get('url') == url:
                 foundIndex = i
                 break
         if foundIndex >= 0:
@@ -65,7 +58,15 @@ def _addTopicPages(topic, datasource, items):
             'page': copy.deepcopy(item),
             'source': copy.deepcopy(datasource),
         }
+
         pages.insert(0, data)
+
+    # clean old pages
+    strStart = dateutil.getHoursAs14(historyHours)
+    for i in range(len(pages)):
+        pageSource = pages[i].get('source')
+        if not pageSource or pageSource.get('added') < strStart:
+            del pages[i]
 
     modelapi.saveTopicHistory(topicSlug, savedTopic)
 
