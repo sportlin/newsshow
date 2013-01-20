@@ -61,26 +61,6 @@ def updateDatasources(datasource, items):
         datasources.append(data)
     cmapi.saveItem(key, datasources, modelname=LatestItem)
 
-def cleanDatasources(days):
-    start = datetime.datetime.utcnow() - datetime.timedelta(days=days)
-    strStart = dateutil.getDateAs14(start)
-    key = _getDatasourcesKey()
-    datasources = getDatasources()
-    cleanedDatasources = [datasource for datasource in datasources
-                    if datasource.get('added') >= strStart]
-    if len(cleanedDatasources) != len(datasources):
-        cmapi.saveItem(key, cleanedDatasources, modelname=LatestItem)
-
-def cleanDatasourceHistory(days):
-    start = datetime.datetime.utcnow() - datetime.timedelta(days=days)
-    strStart = dateutil.getDateAs14(start)
-    key = _getItemsKey()
-    latestItems = getDatasourceHistory()
-    cleanedLatestItems = [datasource for datasource in latestItems
-                    if datasource.get('added') >= strStart]
-    if len(cleanedLatestItems) != len(latestItems):
-        cmapi.saveItem(key, cleanedLatestItems, modelname=LatestItem)
-
 def _getTopicHistoryKey(topicSlug):
     return topicSlug
 

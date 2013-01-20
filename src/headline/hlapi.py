@@ -209,18 +209,6 @@ def getTopics():
 
     return resultTopics
 
-def cleanData():
-    datasourceDays = globalconfig.getDatasourceDays()
-    datasourceHistoryDays = globalconfig.getDatasourceHistoryDays()
-    logging.info('Datasource days: %s.' % (datasourceDays, ))
-    if datasourceDays > 0:
-        modelapi.cleanDatasources(datasourceDays)
-        logging.info('Datasource cleaned.')
-    logging.info('Datasource history days: %s.' % (datasourceHistoryDays, ))
-    if datasourceHistoryDays > 0:
-        modelapi.cleanDatasourceHistory(datasourceHistoryDays)
-        logging.info('Datasource history cleaned.')
-
 def getMenus(selected):
     topics = modelapi.getTopicsConfig()
     menus = []

@@ -26,16 +26,6 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
-def getDatasourceHistoryDays():
-    site = cmapi.getItemValue('archive', {})
-    days = site.get('datasource.history.days', 7)
-    return days
-
-def getDatasourceDays():
-    site = cmapi.getItemValue('archive', {})
-    days = site.get('datasource.days', 30)
-    return days
-
 def getHomeTopicSlug():
     return 'home'
 
