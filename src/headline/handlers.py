@@ -4,9 +4,10 @@ import globalconfig
 from . import hlapi
 
 class MyHandler(BasicHandler):
+    menu = None
 
     def getExtraValues(self):
-        menus = hlapi.getMenus()
+        menus = hlapi.getMenus(self.menu)
         result = {
             'site': globalconfig.getSiteConfig(),
             'i18n': globalconfig.getI18N(),
@@ -40,4 +41,19 @@ class Datasources(MyHandler):
             'datasources': datasources,
         }
         self.render(templateValues, 'datasources.html')
+
+class Topic(MyHandler):
+
+    def get(self, slug=None):
+        if not slug:
+            slug = 'home'
+        self.menu = slug
+        topic = hlapi.getTopic(slug)
+        if not topic:
+            self.error(404)
+            return
+        templateValues = {
+            'topic': topic,
+        }
+        self.render(templateValues, 'topic.html')
 

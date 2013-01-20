@@ -38,7 +38,8 @@ app = webapp2.WSGIApplication([
 ('/t/', headline.handlers.Topics),
 ('/p/', headline.handlers.PageHistory),
 ('/d/', headline.handlers.Datasources),
-('/', headline.handlers.Topics),
+('/', headline.handlers.Topic),
+webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),
 ],
 debug=True, config=config)
 

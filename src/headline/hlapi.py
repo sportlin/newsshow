@@ -2,6 +2,8 @@ import copy
 import datetime
 import logging
 
+import webapp2
+
 from commonutil import stringutil
 from commonutil import dateutil
 import globalconfig
@@ -128,73 +130,75 @@ def _sortDatasources(datasources, orderField='order', reverse=False):
                 source.get(orderField) if source.get(orderField)
                 else stringutil.getMaxOrder(), reverse=reverse)
 
+def _getTopicWithGroups(topic, datasources, defaultGroups):
+    topicTags = topic.get('tags')
+    if not topicTags:
+        return None
+    topicDatasources = _getDatasourcesByTags(datasources, topicTags)
+    if not topicDatasources:
+        return None
+    groups = topic.get('groups')
+    if groups is None:
+        if defaultGroups:
+            groups = defaultGroups
+        else:
+            groups = []
+    topicGroups = []
+    for group in groups:
+        groupTags = group.get('tags')
+        if not groupTags:
+            continue
+        groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
+        if not groupDatasources:
+            continue
+        topicGroup = {}
+        topicGroup['slug'] = group.get('slug')
+        topicGroup['name'] = group.get('name')
+        topicGroup['datasources'] = _sortDatasources(groupDatasources,
+                                        orderField='added', reverse=True)
+        topicGroups.append(topicGroup)
+
+    unmatched = _getUnmatchedDatasources(topicDatasources, groups)
+    if unmatched:
+        unknownGroup = {
+            'slug': 'unknown',
+            'name': '',
+            'datasources': unmatched,
+        }
+        topicGroups.append(unknownGroup)
+
+    resultTopic = {}
+    resultTopic['slug'] = topic.get('slug')
+    resultTopic['name'] = topic.get('name')
+    resultTopic['groups'] = topicGroups
+    return resultTopic
+
 # topic/group/source/page
 def getTopics():
     datasources = modelapi.getDatasources()
-
     displayConfig = modelapi.getDisplayConfig()
-    showUnknown = displayConfig.get('show.unknown', True)
     defaultGroups = displayConfig.get('groups')
     topics = displayConfig.get('topics', [])
     resultTopics = []
     for topic in topics:
-        topicTags = topic.get('tags')
-        if not topicTags:
-            continue
+        resultTopic = _getTopicWithGroups(topic, datasources, defaultGroups)
+        if resultTopic:
+            resultTopics.append(resultTopic)
 
-        topicDatasources = _getDatasourcesByTags(datasources, topicTags)
-        if not topicDatasources:
-            continue
-        groups = topic.get('groups')
-        if groups is None:
-            if defaultGroups:
-                groups = defaultGroups
-            else:
-                groups = []
-        topicGroups = []
-        for group in groups:
-            groupTags = group.get('tags')
-            if not groupTags:
-                continue
-            groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
-            if not groupDatasources:
-                continue
-            topicGroup = {}
-            topicGroup['slug'] = group.get('slug')
-            topicGroup['name'] = group.get('name')
-            topicGroup['datasources'] = _sortDatasources(groupDatasources,
-                                            orderField='added', reverse=True)
-            topicGroups.append(topicGroup)
-
-        if showUnknown:
-            unmatched = _getUnmatchedDatasources(topicDatasources, groups)
-            if unmatched:
-                unknownGroup = {
+    unmatched = _getUnmatchedDatasources(datasources, topics)
+    if unmatched:
+        unknownTopic = {
+            'slug': 'unknown',
+            'name': '',
+            'groups': [
+                {
                     'slug': 'unknown',
                     'name': '',
                     'datasources': unmatched,
                 }
-                topicGroups.append(unknownGroup)
-        resultTopic = {}
-        resultTopic['slug'] = topic.get('slug')
-        resultTopic['name'] = topic.get('name')
-        resultTopic['groups'] = topicGroups
-        resultTopics.append(resultTopic)
+        ]}
+        resultTopics.append(unknownTopic)
 
-    if showUnknown:
-        unmatched = _getUnmatchedDatasources(datasources, topics)
-        if unmatched:
-            unknownTopic = {
-                'slug': 'unknown',
-                'name': '',
-                'groups': [
-                    {
-                        'slug': 'unknown',
-                        'name': '',
-                        'datasources': unmatched,
-                    }
-            ]}
-            resultTopics.append(unknownTopic)
     return resultTopics
 
 def cleanData():
@@ -209,17 +213,44 @@ def cleanData():
         modelapi.cleanDatasourceHistory(datasourceHistoryDays)
         logging.info('Datasource history cleaned.')
 
-def getMenus():
+def getMenus(selected):
     topics = modelapi.getTopicsConfig()
-    menus = {}
+    menus = []
     for topic in topics:
-        if not topic.get('slug'):
+        topicSlug = topic.get('slug')
+        topicName = topic.get('name')
+        if not topicSlug:
             continue
-        if not topic.get('name'):
+        if not topicName:
             continue
+        if topicSlug == 'home':
+            url = '/'
+        else:
+            url = webapp2.uri_for('topic', slug=topicSlug)
         menus.append({
-            'name': topic.get('name'),
-            'url': '/topic/' + topic.get('slug') + '/',
+            'name': topicName,
+            'url': url,
+            'selected': topicSlug == selected,
         })
     return menus
+
+def getTopic(topicSlug):
+    displayConfig = modelapi.getDisplayConfig()
+    topics = displayConfig.get('topics', [])
+    foundTopic = None
+    for topic in topics:
+        if topic.get('slug') == topicSlug:
+            foundTopic = topic
+            break
+    if not foundTopic:
+        return None
+    datasources = modelapi.getDatasources()
+    defaultGroups = displayConfig.get('groups')
+    resultTopic = _getTopicWithGroups(topic, datasources, defaultGroups)
+    if not resultTopic:
+        return None
+    topicHistory = modelapi.getTopicHistory(topicSlug)
+    if topicHistory:
+        resultTopic['latest'] = topicHistory.get('pages')[:10]
+    return resultTopic
 
