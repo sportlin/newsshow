@@ -31,3 +31,6 @@ def getDatasourceDays():
     days = site.get('datasource.days', 30)
     return days
 
+def getHomeTopicSlug():
+    return 'home'
+

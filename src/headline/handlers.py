@@ -1,3 +1,5 @@
+import webapp2
+
 from templateutil.handlers import BasicHandler
 
 import globalconfig
@@ -24,12 +26,17 @@ class Topics(MyHandler):
         }
         self.render(templateValues, 'topics.html')
 
-class PageHistory(MyHandler):
+class TopicHistory(MyHandler):
 
-    def get(self):
-        pages = hlapi.getPageHistory()
+    def get(self, slug=None):
+        topic = hlapi.getTopicHistory(slug)
+        if slug == globalconfig.getHomeTopicSlug() or not slug:
+            topicUrl = None
+        else:
+            topicUrl = webapp2.uri_for('topic', slug=slug)
         templateValues = {
-            'pages': pages,
+            'topicUrl': topicUrl,
+            'topic': topic,
         }
         self.render(templateValues, 'history.html')
 
@@ -52,7 +59,14 @@ class Topic(MyHandler):
         if not topic:
             self.error(404)
             return
+        if slug == globalconfig.getHomeTopicSlug():
+            topicUrl = None
+        else:
+            topicUrl = webapp2.uri_for('topic', slug=slug)
+        latestUrl = webapp2.uri_for('latest', slug=slug)
         templateValues = {
+            'topicUrl': topicUrl,
+            'latestUrl': latestUrl,
             'topic': topic,
         }
         self.render(templateValues, 'topic.html')

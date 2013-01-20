@@ -36,9 +36,10 @@ app = webapp2.WSGIApplication([
 ('/headline/clean/request/', headline.handlersapi.HeadlineCleanRequest),
 ('/headline/clean/', headline.handlersapi.HeadlineCleanResponse),
 ('/t/', headline.handlers.Topics),
-('/p/', headline.handlers.PageHistory),
 ('/d/', headline.handlers.Datasources),
 ('/', headline.handlers.Topic),
+('/latest/', headline.handlers.TopicHistory),
+webapp2.Route('/latest/<slug>/', handler=headline.handlers.TopicHistory, name='latest'),
 webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),
 ],
 debug=True, config=config)

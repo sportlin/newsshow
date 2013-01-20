@@ -18,9 +18,20 @@ def saveItems(datasource, items):
     _addTopicPages(_MOCK_ALL_TOPIC_SLUG, datasource, items)
     _addTopicsPages(topics, datasource, items)
 
-def _addTopicPages(topicSlug, datasource, items):
+def _addTopicPages(topic, datasource, items):
+    if isinstance(topic, basestring):
+        topicSlug = topic
+        topic = {}
+    else:
+        topicSlug = topic.get('slug')
+        if topicSlug is None:
+            topicSlug = ''
     historyHours = globalconfig.getTopicHistoryHours()
     savedTopic = modelapi.getTopicHistory(topicSlug)
+
+    if topic:
+        savedTopic['slug'] = topic.get('slug')
+        savedTopic['name'] = topic.get('name')
 
     pages = savedTopic.get('pages')
     if pages is None:
@@ -69,16 +80,12 @@ def _addTopicsPages(topics, datasource, items):
             continue
         if not _isTagsMatch(topicTags, datasourceTags):
             continue
-        _addTopicPages(topicSlug, datasource, items)
+        _addTopicPages(topic, datasource, items)
 
-def getPageHistory():
-    topic = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
-    if not topic:
-        return []
-    pages = topic.get('pages')
-    if pages is None:
-        return []
-    return pages
+def getTopicHistory(slug):
+    if not slug:
+        slug = _MOCK_ALL_TOPIC_SLUG
+    return modelapi.getTopicHistory(slug)
 
 def getDatasources():
     datasources = modelapi.getDatasources()
@@ -223,7 +230,7 @@ def getMenus(selected):
             continue
         if not topicName:
             continue
-        if topicSlug == 'home':
+        if topicSlug == globalconfig.getHomeTopicSlug():
             url = '/'
         else:
             url = webapp2.uri_for('topic', slug=topicSlug)
