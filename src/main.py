@@ -19,7 +19,7 @@ class MainPage(webapp2.RequestHandler):
 
 config = {}
 config['webapp2_extras.jinja2'] = {
-    'template_path': os.path.join(os.path.dirname(__file__), 'headline', 'templates'),
+    'template_path': os.path.join(os.path.dirname(__file__), 'html', 'templates'),
     'filters': {
         'utc14duration': templateutil.filters.utc14duration
     },
