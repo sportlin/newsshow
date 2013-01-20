@@ -259,6 +259,7 @@ def getTopic(topicSlug):
         return None
     topicHistory = modelapi.getTopicHistory(topicSlug)
     if topicHistory:
-        resultTopic['latest'] = topicHistory.get('pages')[:10]
+        latestCount = globalconfig.getTopicHomeLatest()
+        resultTopic['latest'] = topicHistory.get('pages')[:latestCount]
     return resultTopic
 
