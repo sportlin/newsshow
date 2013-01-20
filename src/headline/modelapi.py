@@ -93,3 +93,7 @@ def saveTopicHistory(topicSlug, value):
     key = _getTopicHistoryKey(topicSlug)
     cmapi.saveItem(key, value, modelname=TopicHistory)
 
+def getTopicsConfig():
+    displayConfig = getDisplayConfig()
+    return displayConfig.get('topics', [])
+

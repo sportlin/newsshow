@@ -26,7 +26,6 @@ config['webapp2_extras.jinja2'] = {
     'environment_args': {
         'extensions': ['jinja2.ext.loopcontrols'],
     },
-    'globals': globalconfig.getSiteConfig(),
 }
 
 app = webapp2.WSGIApplication([

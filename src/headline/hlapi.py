@@ -209,3 +209,17 @@ def cleanData():
         modelapi.cleanDatasourceHistory(datasourceHistoryDays)
         logging.info('Datasource history cleaned.')
 
+def getMenus():
+    topics = modelapi.getTopicsConfig()
+    menus = {}
+    for topic in topics:
+        if not topic.get('slug'):
+            continue
+        if not topic.get('name'):
+            continue
+        menus.append({
+            'name': topic.get('name'),
+            'url': '/topic/' + topic.get('slug') + '/',
+        })
+    return menus
+

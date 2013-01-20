@@ -5,15 +5,11 @@ from configmanager import cmapi
 
 def getSiteConfig():
     return cmapi.getItemValue('site',
-        {
-            'site': {
-                'name': 'Site Name'
-            },
-            'i18n': {
-                'home': 'Home',
-            }
-        }
-    )
+        {'name': 'Site Name'})
+
+def getI18N():
+    return cmapi.getItemValue('i18n',
+        {'home': 'Home'})
 
 def getSiteLatestHours():
     site = cmapi.getItemValue('site', {})
