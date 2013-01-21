@@ -2,8 +2,6 @@ import copy
 import datetime
 import logging
 
-import webapp2
-
 from commonutil import stringutil
 from commonutil import dateutil
 import globalconfig
@@ -210,23 +208,9 @@ def getTopics():
 
     return resultTopics
 
-def getMenus(selected):
-    topics = modelapi.getTopicsConfig()
-    menus = []
-    for topic in topics:
-        topicSlug = topic.get('slug')
-        topicName = topic.get('name')
-        if not topicSlug:
-            continue
-        if not topicName:
-            continue
-        url = webapp2.uri_for('topic', slug=topicSlug)
-        menus.append({
-            'name': topicName,
-            'url': url,
-            'selected': topicSlug == selected,
-        })
-    return menus
+def getTopicConfig():
+    displayConfig = modelapi.getDisplayConfig()
+    return displayConfig.get('topics', [])
 
 def getTopic(topicSlug):
     displayConfig = modelapi.getDisplayConfig()
@@ -278,10 +262,6 @@ def getHomeData():
         resultTopic = {}
         resultTopic['slug'] = topicSlug
         resultTopic['name'] = topic.get('name')
-        resultTopic['url'] = {
-            'topic': webapp2.uri_for('topic', slug=topicSlug),
-            'latest': webapp2.uri_for('latest', slug=topicSlug),
-        }
         resultTopic['pages'] = topicPages[:latestCount]
         resultTopics.append(resultTopic)
     return {

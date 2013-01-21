@@ -5,11 +5,46 @@ from templateutil.handlers import BasicHandler
 import globalconfig
 from . import hlapi
 
+def _getTopicMenus(selected):
+    topics = hlapi.getTopicConfig()
+    menus = []
+    for topic in topics:
+        topicSlug = topic.get('slug')
+        topicName = topic.get('name')
+        if not topicSlug:
+            continue
+        if not topicName:
+            continue
+        url = webapp2.uri_for('topic', slug=topicSlug)
+        menus.append({
+            'name': topicName,
+            'url': url,
+            'selected': topicSlug == selected,
+        })
+    return menus
+
+def _getLatestMenus():
+    topics = hlapi.getTopicConfig()
+    menus = []
+    for topic in topics:
+        topicSlug = topic.get('slug')
+        topicName = topic.get('name')
+        if not topicSlug:
+            continue
+        if not topicName:
+            continue
+        url = webapp2.uri_for('latest', slug=topicSlug)
+        menus.append({
+            'name': topicName,
+            'url': url,
+        })
+    return menus
+
 class MyHandler(BasicHandler):
     menu = None
 
     def getExtraValues(self):
-        menus = hlapi.getMenus(self.menu)
+        menus = _getTopicMenus(self.menu)
         result = {
             'site': globalconfig.getSiteConfig(),
             'i18n': globalconfig.getI18N(),
@@ -34,9 +69,11 @@ class TopicHistory(MyHandler):
             topicUrl = None
         else:
             topicUrl = webapp2.uri_for('topic', slug=slug)
+        latestMenus = _getLatestMenus()
         templateValues = {
             'topicUrl': topicUrl,
             'topic': topic,
+            'latestMenus': latestMenus,
         }
         self.render(templateValues, 'history.html')
 
@@ -70,6 +107,12 @@ class Home(MyHandler):
 
     def get(self):
         homeData = hlapi.getHomeData()
+        for topic in homeData['topics']:
+            topicSlug = topic.get('slug')
+            topic['url'] = {
+                'topic': webapp2.uri_for('topic', slug=topicSlug),
+                'latest': webapp2.uri_for('latest', slug=topicSlug),
+            }
         templateValues = {
             'homeData': homeData,
         }
