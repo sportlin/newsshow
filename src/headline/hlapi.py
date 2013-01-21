@@ -220,10 +220,7 @@ def getMenus(selected):
             continue
         if not topicName:
             continue
-        if topicSlug == globalconfig.getHomeTopicSlug():
-            url = '/'
-        else:
-            url = webapp2.uri_for('topic', slug=topicSlug)
+        url = webapp2.uri_for('topic', slug=topicSlug)
         menus.append({
             'name': topicName,
             'url': url,
@@ -251,4 +248,44 @@ def getTopic(topicSlug):
         latestCount = globalconfig.getTopicHomeLatest()
         resultTopic['latest'] = topicHistory.get('pages')[:latestCount]
     return resultTopic
+
+def _getPagesByTags(pages, tags):
+    result = []
+    for page in pages:
+        pageTags = page.get('source').get('tags', [])
+        if not _isTagsMatch(tags, pageTags):
+            continue
+        result.append(copy.deepcopy(page))
+    return result
+
+def getHomeData():
+    topicHistory = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
+    latestCount = globalconfig.getTopicHomeLatest()
+    displayConfig = modelapi.getDisplayConfig()
+    topics = displayConfig.get('topics', [])
+    pages = topicHistory.get('pages')
+    resultTopics = []
+    logging.info('pages: %s.' % (pages, ))
+    for topic in topics:
+        topicTags = topic.get('tags')
+        if not topicTags:
+            continue
+        topicPages = _getPagesByTags(pages, topicTags)
+        logging.info('topic: %s, pages: %s.' % (topic, topicPages, ))
+        if not topicPages:
+            continue
+        topicSlug = topic.get('slug')
+        resultTopic = {}
+        resultTopic['slug'] = topicSlug
+        resultTopic['name'] = topic.get('name')
+        resultTopic['url'] = {
+            'topic': webapp2.uri_for('topic', slug=topicSlug),
+            'latest': webapp2.uri_for('latest', slug=topicSlug),
+        }
+        resultTopic['pages'] = topicPages[:latestCount]
+        resultTopics.append(resultTopic)
+    return {
+        'topics': resultTopics,
+        'latest': pages[:latestCount],
+    }
 

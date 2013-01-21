@@ -30,7 +30,7 @@ class TopicHistory(MyHandler):
 
     def get(self, slug=None):
         topic = hlapi.getTopicHistory(slug)
-        if slug == globalconfig.getHomeTopicSlug() or not slug:
+        if not slug:
             topicUrl = None
         else:
             topicUrl = webapp2.uri_for('topic', slug=slug)
@@ -51,18 +51,13 @@ class Datasources(MyHandler):
 
 class Topic(MyHandler):
 
-    def get(self, slug=None):
-        if not slug:
-            slug = 'home'
+    def get(self, slug):
         self.menu = slug
         topic = hlapi.getTopic(slug)
         if not topic:
             self.error(404)
             return
-        if slug == globalconfig.getHomeTopicSlug():
-            topicUrl = None
-        else:
-            topicUrl = webapp2.uri_for('topic', slug=slug)
+        topicUrl = webapp2.uri_for('topic', slug=slug)
         latestUrl = webapp2.uri_for('latest', slug=slug)
         templateValues = {
             'topicUrl': topicUrl,
@@ -70,4 +65,13 @@ class Topic(MyHandler):
             'topic': topic,
         }
         self.render(templateValues, 'topic.html')
+
+class Home(MyHandler):
+
+    def get(self):
+        homeData = hlapi.getHomeData()
+        templateValues = {
+            'homeData': homeData,
+        }
+        self.render(templateValues, 'home.html')
 

@@ -29,6 +29,7 @@ config['webapp2_extras.jinja2'] = {
 }
 
 app = webapp2.WSGIApplication([
+('/', headline.handlers.Home),
 ('/hello/', MainPage),
 ('/configitem/', configmanager.handlers.MainPage),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
@@ -37,7 +38,6 @@ app = webapp2.WSGIApplication([
 ('/headline/clean/', headline.handlersapi.HeadlineCleanResponse),
 ('/t/', headline.handlers.Topics),
 ('/d/', headline.handlers.Datasources),
-('/', headline.handlers.Topic),
 webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),
 ('/latest/', headline.handlers.TopicHistory),
 webapp2.Route('/latest/<slug>/', handler=headline.handlers.TopicHistory, name='latest'),

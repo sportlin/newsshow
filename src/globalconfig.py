@@ -26,6 +26,3 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
-def getHomeTopicSlug():
-    return 'home'
-
