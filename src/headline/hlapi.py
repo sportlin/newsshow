@@ -44,14 +44,11 @@ def _addTopicPages(topic, datasource, items):
             continue
 
         # remove old duplicated page
-        foundIndex = -1
-        for i in range(len(pages)):
-            page = pages[i]
-            if page['page'].get('url') == url:
-                foundIndex = i
+        for i in range(len(pages) -1, 0, -1):
+            pageItem = pages[i]['page']
+            if pageItem.get('url') == url:
+                del pages[i]
                 break
-        if foundIndex >= 0:
-            del pages[foundIndex]
 
         # insert the latest page at top
         data = {
@@ -63,10 +60,14 @@ def _addTopicPages(topic, datasource, items):
 
     # clean old pages
     strStart = dateutil.getHoursAs14(historyHours)
-    for i in range(len(pages)):
+    for i in range(len(pages) -1, 0, -1):
         pageSource = pages[i].get('source')
-        if not pageSource or pageSource.get('added') < strStart:
-            del pages[i]
+        if pageSource and pageSource.get('added') >= strStart:
+            break
+        del pages[i]
+
+    savedTopic['pages'] = sorted(pages, key=lambda page:
+                page.get('source').get('added'), reverse=True)
 
     modelapi.saveTopicHistory(topicSlug, savedTopic)
 
