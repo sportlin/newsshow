@@ -85,7 +85,8 @@ def _addTopicsPages(topics, datasource, items):
 def getTopicHistory(slug):
     if not slug:
         slug = _MOCK_ALL_TOPIC_SLUG
-    return modelapi.getTopicHistory(slug)
+    topicHistory = modelapi.getTopicHistory(slug)
+    return topicHistory
 
 def getDatasources():
     datasources = modelapi.getDatasources()
@@ -208,7 +209,7 @@ def getTopics():
 
     return resultTopics
 
-def getTopicConfig():
+def getTopicsConfig():
     displayConfig = modelapi.getDisplayConfig()
     return displayConfig.get('topics', [])
 
@@ -224,7 +225,11 @@ def getTopic(topicSlug):
         return None
     datasources = modelapi.getDatasources()
     defaultGroups = displayConfig.get('groups')
-    resultTopic = _getTopicWithGroups(topic, datasources, defaultGroups)
+    resultTopic = _getTopicWithGroups(foundTopic, datasources, defaultGroups)
+    if foundTopic.get('keywords'):
+        resultTopic['keywords'] = foundTopic.get('keywords')
+    if foundTopic.get('description'):
+        resultTopic['description'] = foundTopic.get('description')
     if not resultTopic:
         return None
     topicHistory = modelapi.getTopicHistory(topicSlug)
@@ -249,13 +254,11 @@ def getHomeData():
     topics = displayConfig.get('topics', [])
     pages = topicHistory.get('pages')
     resultTopics = []
-    logging.info('pages: %s.' % (pages, ))
     for topic in topics:
         topicTags = topic.get('tags')
         if not topicTags:
             continue
         topicPages = _getPagesByTags(pages, topicTags)
-        logging.info('topic: %s, pages: %s.' % (topic, topicPages, ))
         if not topicPages:
             continue
         topicSlug = topic.get('slug')

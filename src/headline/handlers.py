@@ -6,7 +6,7 @@ import globalconfig
 from . import hlapi
 
 def _getTopicMenus(selected):
-    topics = hlapi.getTopicConfig()
+    topics = hlapi.getTopicsConfig()
     menus = []
     for topic in topics:
         topicSlug = topic.get('slug')
@@ -24,7 +24,7 @@ def _getTopicMenus(selected):
     return menus
 
 def _getLatestMenus():
-    topics = hlapi.getTopicConfig()
+    topics = hlapi.getTopicsConfig()
     menus = []
     for topic in topics:
         topicSlug = topic.get('slug')
@@ -61,22 +61,6 @@ class Topics(MyHandler):
         }
         self.render(templateValues, 'topics.html')
 
-class TopicHistory(MyHandler):
-
-    def get(self, slug=None):
-        topic = hlapi.getTopicHistory(slug)
-        if not slug:
-            topicUrl = None
-        else:
-            topicUrl = webapp2.uri_for('topic', slug=slug)
-        latestMenus = _getLatestMenus()
-        templateValues = {
-            'topicUrl': topicUrl,
-            'topic': topic,
-            'latestMenus': latestMenus,
-        }
-        self.render(templateValues, 'history.html')
-
 class Datasources(MyHandler):
 
     def get(self):
@@ -102,6 +86,22 @@ class Topic(MyHandler):
             'topic': topic,
         }
         self.render(templateValues, 'topic.html')
+
+class TopicHistory(MyHandler):
+
+    def get(self, slug=None):
+        topic = hlapi.getTopicHistory(slug)
+        if not slug:
+            topicUrl = None
+        else:
+            topicUrl = webapp2.uri_for('topic', slug=slug)
+        latestMenus = _getLatestMenus()
+        templateValues = {
+            'topicUrl': topicUrl,
+            'topic': topic,
+            'latestMenus': latestMenus,
+        }
+        self.render(templateValues, 'history.html')
 
 class Home(MyHandler):
 
