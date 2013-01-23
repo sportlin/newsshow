@@ -34,8 +34,6 @@ app = webapp2.WSGIApplication([
 ('/configitem/', configmanager.handlers.MainPage),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
-('/headline/clean/request/', headline.handlersapi.HeadlineCleanRequest),
-('/headline/clean/', headline.handlersapi.HeadlineCleanResponse),
 ('/t/', headline.handlers.Topics),
 ('/d/', headline.handlers.Datasources),
 webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),

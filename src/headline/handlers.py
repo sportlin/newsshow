@@ -3,6 +3,7 @@ import webapp2
 from templateutil.handlers import BasicHandler
 
 import globalconfig
+
 from . import hlapi
 
 def _getTopicMenus(selected):
@@ -43,18 +44,19 @@ def _getLatestMenus():
 class MyHandler(BasicHandler):
     menu = None
 
-    def getExtraValues(self):
+    def prepareBaseValues(self):
+        self.site = globalconfig.getSiteConfig()
+        self.i18n = globalconfig.getI18N()
+
+    def prepareValues(self):
         menus = _getTopicMenus(self.menu)
-        result = {
-            'site': globalconfig.getSiteConfig(),
-            'i18n': globalconfig.getI18N(),
-            'menus': menus,
-        }
-        return result
+        self.extraValues['menus'] = menus
 
 class Topics(MyHandler):
 
     def get(self):
+        if not self.prepare():
+            return
         topics = hlapi.getTopics()
         templateValues = {
             'topics': topics,
@@ -64,6 +66,8 @@ class Topics(MyHandler):
 class Datasources(MyHandler):
 
     def get(self):
+        if not self.prepare():
+            return
         datasources = hlapi.getDatasources()
         templateValues = {
             'datasources': datasources,
@@ -74,6 +78,8 @@ class Topic(MyHandler):
 
     def get(self, slug):
         self.menu = slug
+        if not self.prepare():
+            return
         topic = hlapi.getTopic(slug)
         if not topic:
             self.error(404)
@@ -90,6 +96,8 @@ class Topic(MyHandler):
 class TopicHistory(MyHandler):
 
     def get(self, slug=None):
+        if not self.prepare():
+            return
         topic = hlapi.getTopicHistory(slug)
         if not slug:
             topicUrl = None
@@ -106,6 +114,8 @@ class TopicHistory(MyHandler):
 class Home(MyHandler):
 
     def get(self):
+        if not self.prepare():
+            return
         homeData = hlapi.getHomeData()
         for topic in homeData['topics']:
             topicSlug = topic.get('slug')

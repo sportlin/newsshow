@@ -1,4 +1,3 @@
-import logging
 
 from google.appengine.api import taskqueue
 
@@ -26,17 +25,4 @@ class HeadlineAddResponse(webapp2.RequestHandler):
         hlapi.saveItems(datasource, items)
         self.response.out.write('Done.')
 
-class HeadlineCleanRequest(webapp2.RequestHandler):
-
-    def get(self):
-        taskqueue.add(queue_name="default", url='/headline/clean/')
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('Request is accepted.')
-
-class HeadlineCleanResponse(webapp2.RequestHandler):
-
-    def post(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        hlapi.cleanData()
-        self.response.out.write('Done.')
 
