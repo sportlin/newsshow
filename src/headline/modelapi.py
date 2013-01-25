@@ -49,14 +49,22 @@ def updateDatasources(datasource, items):
     sourceSlug = datasource.get('slug')
     key = _getDatasourcesKey()
     datasources = getDatasources()
-    found = -1
+    found = None
+    foundIndex = -1
     for i in range(len(datasources)):
         item = datasources[i]
         if item.get('slug') == datasource.get('slug'):
-            found = i
+            foundIndex = i
+            found = item
             break
-    if found >= 0:
-        datasources[found] = data
+    if foundIndex >= 0:
+        foundCounter = found.get('counter')
+        dataCounter = datasource.get('counter')
+        if dataCounter is None or foundCounter is None\
+                or dataCounter > foundCounter:
+            datasources[foundIndex] = data
+        elif dataCounter == foundCounter:
+            found['pages'].extend(items)
     else:
         datasources.append(data)
     cmapi.saveItem(key, datasources, modelname=LatestItem)
