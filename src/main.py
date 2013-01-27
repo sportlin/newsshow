@@ -24,7 +24,7 @@ config['webapp2_extras.jinja2'] = {
         'utc14duration': templateutil.filters.utc14duration
     },
     'environment_args': {
-        'extensions': ['jinja2.ext.loopcontrols'],
+        'extensions': ['jinja2.ext.loopcontrols', 'jinja2.ext.with_'],
     },
 }
 
