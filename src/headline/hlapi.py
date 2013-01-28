@@ -10,8 +10,7 @@ from . import modelapi
 _MOCK_ALL_TOPIC_SLUG = 'all'
 
 def saveItems(datasource, items):
-    displayConfig = modelapi.getDisplayConfig()
-    topics = displayConfig.get('topics', [])
+    topics = modelapi.getDisplayTopics()
     modelapi.updateDatasources(datasource, items)
     _addTopicPages(_MOCK_ALL_TOPIC_SLUG, datasource, items)
     _addTopicsPages(topics, datasource, items)
@@ -26,10 +25,6 @@ def _addTopicPages(topic, datasource, items):
             topicSlug = ''
     historyHours = globalconfig.getTopicHistoryHours()
     savedTopic = modelapi.getTopicHistory(topicSlug)
-
-    if topic:
-        savedTopic['slug'] = topic.get('slug')
-        savedTopic['name'] = topic.get('name')
 
     pages = savedTopic.get('pages')
     if pages is None:
@@ -82,12 +77,6 @@ def _addTopicsPages(topics, datasource, items):
             continue
         _addTopicPages(topic, datasource, items)
 
-def getTopicHistory(slug):
-    if not slug:
-        slug = _MOCK_ALL_TOPIC_SLUG
-    topicHistory = modelapi.getTopicHistory(slug)
-    return topicHistory
-
 def getDatasources():
     datasources = modelapi.getDatasources()
     datasources = sorted(datasources, key=lambda datasource: datasource.get('added'), reverse=True)
@@ -138,7 +127,7 @@ def _sortDatasources(datasources, orderField='order', reverse=False):
                 source.get(orderField) if source.get(orderField)
                 else stringutil.getMaxOrder(), reverse=reverse)
 
-def _getTopicWithGroups(topic, datasources, defaultGroups):
+def _getTopicGroups(topic, datasources, defaultGroups):
     topicTags = topic.get('tags')
     if not topicTags:
         return None
@@ -175,22 +164,19 @@ def _getTopicWithGroups(topic, datasources, defaultGroups):
         }
         topicGroups.append(unknownGroup)
 
-    resultTopic = {}
-    resultTopic['slug'] = topic.get('slug')
-    resultTopic['name'] = topic.get('name')
-    resultTopic['groups'] = topicGroups
-    return resultTopic
+    return topicGroups
 
 # topic/group/source/page
 def getTopics():
     datasources = modelapi.getDatasources()
-    displayConfig = modelapi.getDisplayConfig()
-    defaultGroups = displayConfig.get('groups')
-    topics = displayConfig.get('topics', [])
+    defaultGroups = modelapi.getDisplayGroups()
+    topics = modelapi.getDisplayTopics()
     resultTopics = []
     for topic in topics:
-        resultTopic = _getTopicWithGroups(topic, datasources, defaultGroups)
-        if resultTopic:
+        topicGroups = _getTopicGroups(topic, datasources, defaultGroups)
+        if topicGroups:
+            resultTopic = copy.deepcopy(topic.get('ui'))
+            resultTopic['groups'] = topicGroups
             resultTopics.append(resultTopic)
 
     unmatched = _getUnmatchedDatasources(datasources, topics)
@@ -210,33 +196,35 @@ def getTopics():
     return resultTopics
 
 def getTopicsConfig():
-    displayConfig = modelapi.getDisplayConfig()
-    return displayConfig.get('topics', [])
+    return [topic.get('ui') for topic in modelapi.getDisplayTopics()]
 
 def getTopic(topicSlug):
-    displayConfig = modelapi.getDisplayConfig()
-    topics = displayConfig.get('topics', [])
-    foundTopic = None
-    for topic in topics:
-        if topic.get('slug') == topicSlug:
-            foundTopic = topic
-            break
+    topics = modelapi.getDisplayTopics()
+    foundTopic = modelapi.getDisplayTopic(topicSlug)
     if not foundTopic:
         return None
     datasources = modelapi.getDatasources()
-    defaultGroups = displayConfig.get('groups')
-    resultTopic = _getTopicWithGroups(foundTopic, datasources, defaultGroups)
-    if foundTopic.get('keywords'):
-        resultTopic['keywords'] = foundTopic.get('keywords')
-    if foundTopic.get('description'):
-        resultTopic['description'] = foundTopic.get('description')
-    if not resultTopic:
-        return None
-    topicHistory = modelapi.getTopicHistory(topicSlug)
-    if topicHistory:
-        latestCount = globalconfig.getTopicHomeLatest()
-        resultTopic['latest'] = topicHistory.get('pages')[:latestCount]
+    defaultGroups = modelapi.getDisplayGroups()
+    topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
+    resultTopic = None
+    if topicGroups:
+        resultTopic = copy.deepcopy(foundTopic.get('ui'))
+        resultTopic['groups'] = topicGroups
     return resultTopic
+
+def getTopicHistory(slug):
+    foundTopic = None
+    if not slug:
+        slug = _MOCK_ALL_TOPIC_SLUG
+    else:
+        foundTopic = modelapi.getDisplayTopic(slug)
+    topicHistory = modelapi.getTopicHistory(slug)
+    if foundTopic:
+        resultTopic = copy.deepcopy(foundTopic.get('ui'))
+        if topicHistory:
+            resultTopic['pages'] = topicHistory['pages']
+        return resultTopic
+    return topicHistory
 
 def _getPagesByTags(pages, tags):
     result = []
@@ -250,8 +238,7 @@ def _getPagesByTags(pages, tags):
 def getHomeData():
     topicHistory = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
     latestCount = globalconfig.getTopicHomeLatest()
-    displayConfig = modelapi.getDisplayConfig()
-    topics = displayConfig.get('topics', [])
+    topics = modelapi.getDisplayTopics()
     pages = topicHistory.get('pages')
     resultTopics = []
     for topic in topics:
@@ -261,10 +248,7 @@ def getHomeData():
         topicPages = _getPagesByTags(pages, topicTags)
         if not topicPages:
             continue
-        topicSlug = topic.get('slug')
-        resultTopic = {}
-        resultTopic['slug'] = topicSlug
-        resultTopic['name'] = topic.get('name')
+        resultTopic = copy.deepcopy(topic.get('ui'))
         resultTopic['pages'] = topicPages[:latestCount]
         resultTopics.append(resultTopic)
     return {

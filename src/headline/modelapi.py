@@ -12,27 +12,12 @@ class LatestItem(configmanager.models.ConfigItem):
 class TopicHistory(configmanager.models.ConfigItem):
     pass
 
+class DisplayItem(configmanager.models.ConfigItem):
+    pass
+
 cmapi.registerModel(LatestItem)
 cmapi.registerModel(TopicHistory)
-
-def getDisplayConfig():
-    return cmapi.getItemValue('display.structure', {})
-
-def _getItemsKey():
-    return 'datasource.history'
-
-def getDatasourceHistory():
-    items = cmapi.getItemValue(_getItemsKey(), [], modelname=LatestItem)
-    return items
-
-def saveDatasourceHistory(datasource, items):
-    data = copy.deepcopy(datasource)
-    data['pages'] = copy.deepcopy(items)
-
-    key = _getItemsKey()
-    latestItems = getDatasourceHistory()
-    latestItems.insert(0, data)
-    cmapi.saveItem(key, latestItems, modelname=LatestItem)
+cmapi.registerModel(DisplayItem)
 
 def _getDatasourcesKey():
     return 'datasources'
@@ -81,7 +66,17 @@ def saveTopicHistory(topicSlug, value):
     key = _getTopicHistoryKey(topicSlug)
     cmapi.saveItem(key, value, modelname=TopicHistory)
 
-def getTopicsConfig():
-    displayConfig = getDisplayConfig()
-    return displayConfig.get('topics', [])
+def getDisplayTopics():
+    return cmapi.getItemValue('display.topics', [], modelname=DisplayItem)
+
+def getDisplayGroups():
+    return cmapi.getItemValue('display.groups', [], modelname=DisplayItem)
+
+def getDisplayTopic(topicSlug):
+    foundTopic = None
+    for topic in getDisplayTopics():
+        if topic.get('slug') == topicSlug:
+            foundTopic = topic
+            break
+    return foundTopic
 

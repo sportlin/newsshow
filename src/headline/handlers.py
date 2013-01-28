@@ -16,28 +16,11 @@ def _getTopicMenus(selected):
             continue
         if not topicName:
             continue
-        url = webapp2.uri_for('topic', slug=topicSlug)
-        menus.append({
-            'name': topicName,
-            'url': url,
-            'selected': topicSlug == selected,
-        })
-    return menus
-
-def _getLatestMenus():
-    topics = hlapi.getTopicsConfig()
-    menus = []
-    for topic in topics:
-        topicSlug = topic.get('slug')
-        topicName = topic.get('name')
-        if not topicSlug:
-            continue
-        if not topicName:
-            continue
         url = webapp2.uri_for('latest', slug=topicSlug)
         menus.append({
             'name': topicName,
             'url': url,
+            'selected': topicSlug == selected,
         })
     return menus
 
@@ -77,18 +60,13 @@ class Datasources(MyHandler):
 class Topic(MyHandler):
 
     def get(self, slug):
-        self.menu = slug
         if not self.prepare():
             return
         topic = hlapi.getTopic(slug)
         if not topic:
             self.error(404)
             return
-        topicUrl = webapp2.uri_for('topic', slug=slug)
-        latestUrl = webapp2.uri_for('latest', slug=slug)
         templateValues = {
-            'topicUrl': topicUrl,
-            'latestUrl': latestUrl,
             'topic': topic,
         }
         self.render(templateValues, 'topic.html')
@@ -96,6 +74,7 @@ class Topic(MyHandler):
 class TopicHistory(MyHandler):
 
     def get(self, slug=None):
+        self.menu = slug
         if not self.prepare():
             return
         topic = hlapi.getTopicHistory(slug)
@@ -103,11 +82,9 @@ class TopicHistory(MyHandler):
             topicUrl = None
         else:
             topicUrl = webapp2.uri_for('topic', slug=slug)
-        latestMenus = _getLatestMenus()
         templateValues = {
             'topicUrl': topicUrl,
             'topic': topic,
-            'latestMenus': latestMenus,
         }
         self.render(templateValues, 'history.html')
 
