@@ -263,7 +263,6 @@ def getHomeData():
         resultTopics.append(resultTopic)
     return {
         'topics': resultTopics,
-        'latest': pages[:latestCount],
     }
 
 def getDatasourceHistory(sourceId):

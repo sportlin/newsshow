@@ -6,9 +6,10 @@ import globalconfig
 
 from . import hlapi
 
-def _getTopicMenus(selected):
+def _getMenu():
     topics = hlapi.getTopicsConfig()
-    menus = []
+    latestMenus = []
+    topicMenus = []
     for topic in topics:
         topicSlug = topic.get('slug')
         topicName = topic.get('name')
@@ -16,24 +17,30 @@ def _getTopicMenus(selected):
             continue
         if not topicName:
             continue
+
         url = webapp2.uri_for('latest', slug=topicSlug)
-        menus.append({
+        latestMenus.append({
             'name': topicName,
             'url': url,
-            'selected': topicSlug == selected,
         })
-    return menus
+
+        url = webapp2.uri_for('topic', slug=topicSlug)
+        topicMenus.append({
+            'name': topicName,
+            'url': url,
+        })
+    return {
+            'latest': latestMenus,
+            'topic': topicMenus,
+        }
 
 class MyHandler(BasicHandler):
-    menu = None
-
     def prepareBaseValues(self):
         self.site = globalconfig.getSiteConfig()
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        menus = _getTopicMenus(self.menu)
-        self.extraValues['menus'] = menus
+        self.extraValues['menu'] = _getMenu()
 
 class Topics(MyHandler):
 
@@ -80,7 +87,6 @@ class Topic(MyHandler):
 class TopicHistory(MyHandler):
 
     def get(self, slug=None):
-        self.menu = slug
         if not self.prepare():
             return
         topic = hlapi.getTopicHistory(slug)
@@ -104,7 +110,6 @@ class Home(MyHandler):
             topicSlug = topic.get('slug')
             topic['url'] = {
                 'topic': webapp2.uri_for('topic', slug=topicSlug),
-                'latest': webapp2.uri_for('latest', slug=topicSlug),
             }
         templateValues = {
             'homeData': homeData,
