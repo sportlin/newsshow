@@ -198,6 +198,12 @@ def getTopics():
 def getTopicsConfig():
     return [topic.get('ui') for topic in modelapi.getDisplayTopics()]
 
+def _populateDatasourceId(datasourceIds, datasources):
+    for datasource in datasources:
+        datasourceId = datasourceIds.get(datasource.get('slug'))
+        if datasourceId:
+            datasource['id'] = datasourceId
+
 def getTopic(topicSlug):
     topics = modelapi.getDisplayTopics()
     foundTopic = modelapi.getDisplayTopic(topicSlug)
@@ -208,6 +214,10 @@ def getTopic(topicSlug):
     topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
     resultTopic = None
     if topicGroups:
+        # populate datasource id for datasources, as exposed id.
+        datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
+        for topicGroup in topicGroups:
+            _populateDatasourceId(datasourceIds, topicGroup['datasources'])
         resultTopic = copy.deepcopy(foundTopic.get('ui'))
         resultTopic['groups'] = topicGroups
     return resultTopic
@@ -239,7 +249,7 @@ def getHomeData():
     topicHistory = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
     latestCount = globalconfig.getTopicHomeLatest()
     topics = modelapi.getDisplayTopics()
-    pages = topicHistory.get('pages')
+    pages = topicHistory.get('pages', [])
     resultTopics = []
     for topic in topics:
         topicTags = topic.get('tags')
@@ -255,4 +265,88 @@ def getHomeData():
         'topics': resultTopics,
         'latest': pages[:latestCount],
     }
+
+def getDatasourceHistory(sourceId):
+    datasource = modelapi.getDisplayDatasourceById(sourceId)
+    if not datasource:
+        return None
+    topicSlug = datasource.get('topic')
+    sourceSlug = datasource.get('slug')
+    topicHistory = modelapi.getTopicHistory(topicSlug)
+    foundTopic = modelapi.getDisplayTopic(topicSlug)
+    if topicHistory:
+        pages = topicHistory['pages']
+        pages = [page for page in pages
+                    if page['source'].get('slug') == sourceSlug]
+        if pages:
+            datasource['name'] = pages[0]['source']['name']
+        datasource['pages'] =  [page['page'] for page in pages]
+    if foundTopic:
+        datasource['topicName'] = foundTopic['ui']['name']
+    return datasource
+
+def getDisplayDatasources():
+    datasources = modelapi.getDisplayDatasources()
+    return [datasource for datasource in datasources]
+
+def getUnexposedDatasources():
+    datasources = modelapi.getDatasources()
+    topics = modelapi.getDisplayTopics()
+    result = []
+    datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=False)
+    for topic in topics:
+        topicTags = topic.get('tags')
+        if not topicTags:
+            return None
+        topicDatasources = _getDatasourcesByTags(datasources, topicTags)
+        for datasource in topicDatasources:
+            if datasource.get('slug') in datasourceIds:
+                continue
+            suggestId = ''
+            parts = datasource['slug'].split('.')
+            if len(parts) > 1:
+                suggestId = parts[1]
+            result.append({
+                'slug': datasource['slug'],
+                'name': datasource['name'],
+                'topic': topic['slug'],
+                'id': suggestId,
+            })
+    return result
+
+def exposeDatasource(topic, slug, sourceId):
+    datasources = modelapi.getDisplayDatasources()
+    # id can not be duplicated.
+    for datasource in datasources:
+        if datasource['id'] == sourceId and slug and datasource['slug'] != slug:
+            return
+    found = None
+    for datasource in datasources:
+        if datasource['id'] == sourceId:
+            found = datasource
+            break
+    if not found:
+        found = {}
+        datasources.append(found)
+    if topic:
+        found['topic'] = topic
+    if slug:
+        found['slug'] = slug
+    if sourceId:
+        found['id'] = sourceId
+    found['active'] = True
+    datasources.sort(key=lambda datasource: datasource.get('topic'))
+    datasources.sort(key=lambda datasource: datasource.get('active'))
+    modelapi.saveDisplayDatasources(datasources)
+
+def closeDatasource(sourceId):
+    datasources = modelapi.getDisplayDatasources()
+    found = None
+    for datasource in datasources:
+        if datasource['id'] == sourceId:
+            found = datasource
+            break
+    if found:
+        found['active'] = False
+        modelapi.saveDisplayDatasources(datasources)
 

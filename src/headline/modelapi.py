@@ -80,3 +80,27 @@ def getDisplayTopic(topicSlug):
             break
     return foundTopic
 
+def getDisplayDatasources():
+    return cmapi.getItemValue('display.datasources', [], modelname=DisplayItem)
+
+def saveDisplayDatasources(datasources):
+    return cmapi.saveItem('display.datasources', datasources, modelname=DisplayItem)
+
+def getDisplayDatasourceIds(onlyActive):
+    items = cmapi.getItemValue('display.datasources', [], modelname=DisplayItem)
+    result = {}
+    for item in items:
+        itemId = item.get('id')
+        itemSlug = item.get('slug')
+        if onlyActive and not item.get('active'):
+            continue
+        result[itemSlug] = itemId
+    return result
+
+def getDisplayDatasourceById(itemId):
+    items = cmapi.getItemValue('display.datasources', [], modelname=DisplayItem)
+    for item in items:
+        if item.get('id') == itemId:
+            return item
+    return None
+

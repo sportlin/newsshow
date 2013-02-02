@@ -66,6 +66,12 @@ class Topic(MyHandler):
         if not topic:
             self.error(404)
             return
+        for group in topic['groups']:
+            for datasource in group['datasources']:
+                sourceId = datasource.get('id')
+                if sourceId:
+                    datasource['history'] = webapp2.uri_for('datasource',
+                        sourceId=sourceId)
         templateValues = {
             'topic': topic,
         }
@@ -104,4 +110,22 @@ class Home(MyHandler):
             'homeData': homeData,
         }
         self.render(templateValues, 'home.html')
+
+class DatasourceHistory(MyHandler):
+
+    def get(self, sourceId=None):
+        if not self.prepare():
+            return
+        datasource = hlapi.getDatasourceHistory(sourceId)
+
+        if not datasource:
+            self.error(404)
+            return
+
+        datasource['topicLink'] = webapp2.uri_for('topic',
+                    slug=datasource['topic'])
+        templateValues = {
+            'datasource': datasource,
+        }
+        self.render(templateValues, 'datasource.html')
 
