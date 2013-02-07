@@ -84,7 +84,7 @@ class Topic(MyHandler):
         }
         self.render(templateValues, 'topic.html')
 
-class TopicHistory(MyHandler):
+class TopicLatest(MyHandler):
 
     def get(self, slug=None):
         if not self.prepare():
@@ -98,7 +98,7 @@ class TopicHistory(MyHandler):
             'topicUrl': topicUrl,
             'topic': topic,
         }
-        self.render(templateValues, 'history.html')
+        self.render(templateValues, 'latest.html')
 
 class Home(MyHandler):
 
@@ -110,6 +110,7 @@ class Home(MyHandler):
             topicSlug = topic.get('slug')
             topic['url'] = {
                 'topic': webapp2.uri_for('topic', slug=topicSlug),
+                'latest': webapp2.uri_for('latest', slug=topicSlug),
             }
         templateValues = {
             'homeData': homeData,

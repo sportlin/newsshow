@@ -32,7 +32,10 @@ def _addTopicPages(topic, datasource, items):
         savedTopic['pages'] = pages
 
     for item in items:
-        url = item.get('url')
+        monitorPage = item.get('monitor')
+        if not monitorPage:
+            continue
+        url = monitorPage.get('url')
         if not url:
             continue
 
@@ -250,6 +253,7 @@ def getHomeData():
     latestCount = globalconfig.getTopicHomeLatest()
     topics = modelapi.getDisplayTopics()
     pages = topicHistory.get('pages', [])
+    pages = [page for page in pages if not page.get('duplicated')]
     resultTopics = []
     for topic in topics:
         topicTags = topic.get('tags')
