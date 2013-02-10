@@ -86,14 +86,11 @@ class Topic(MyHandler):
 
 class TopicLatest(MyHandler):
 
-    def get(self, slug=None):
+    def get(self, slug):
         if not self.prepare():
             return
         topic = hlapi.getTopicHistory(slug)
-        if not slug:
-            topicUrl = None
-        else:
-            topicUrl = webapp2.uri_for('topic', slug=slug)
+        topicUrl = webapp2.uri_for('topic', slug=slug)
         templateValues = {
             'topicUrl': topicUrl,
             'topic': topic,

@@ -7,12 +7,9 @@ from commonutil import dateutil
 import globalconfig
 from . import modelapi
 
-_MOCK_ALL_TOPIC_SLUG = 'all'
-
 def saveItems(datasource, items):
     topics = modelapi.getDisplayTopics()
     modelapi.updateDatasources(datasource, items)
-    _addTopicPages(_MOCK_ALL_TOPIC_SLUG, datasource, items)
     _addTopicsPages(topics, datasource, items)
 
 def _addTopicPages(topic, datasource, items):
@@ -226,11 +223,7 @@ def getTopic(topicSlug):
     return resultTopic
 
 def getTopicHistory(slug):
-    foundTopic = None
-    if not slug:
-        slug = _MOCK_ALL_TOPIC_SLUG
-    else:
-        foundTopic = modelapi.getDisplayTopic(slug)
+    foundTopic = modelapi.getDisplayTopic(slug)
     topicHistory = modelapi.getTopicHistory(slug)
     if foundTopic:
         resultTopic = copy.deepcopy(foundTopic.get('ui'))
@@ -249,11 +242,17 @@ def _getPagesByTags(pages, tags):
     return result
 
 def getHomeData():
-    topicHistory = modelapi.getTopicHistory(_MOCK_ALL_TOPIC_SLUG)
+    datasources = modelapi.getDatasources()
+    pages = []
+    for datasource in datasources:
+        dpages = datasource['pages']
+        del datasource['pages']
+        for page in dpages:
+            page['source'] = datasource
+        pages.extend(dpages)
+    pages.sort(key=lambda page: page['source']['added'], reverse=True)
     latestCount = globalconfig.getTopicHomeLatest()
     topics = modelapi.getDisplayTopics()
-    pages = topicHistory.get('pages', [])
-    pages = [page for page in pages if not page.get('duplicated')]
     resultTopics = []
     for topic in topics:
         topicTags = topic.get('tags')
