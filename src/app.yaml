@@ -11,12 +11,15 @@ handlers:
   mime_type: image/x-icon
 
 - url: /robots.txt
-  static_files: html/static/robots.txt
-  upload: html/static/robots.txt
+  static_files: html/site/robots.txt
+  upload: html/site/robots.txt
 
 - url: /sitemap.xml
-  static_files: html/static/sitemap.xml
-  upload: html/static/sitemap.xml
+  static_files: html/site/sitemap.xml
+  upload: html/site/sitemap.xml
+
+- url: /media/1
+  static_dir: html/media
 
 - url: /.*
   script: main.app
