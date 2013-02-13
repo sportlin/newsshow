@@ -224,13 +224,25 @@ def getTopic(topicSlug):
 
 def getTopicHistory(slug):
     foundTopic = modelapi.getDisplayTopic(slug)
+    if not foundTopic:
+        return None
     topicHistory = modelapi.getTopicHistory(slug)
-    if foundTopic:
-        resultTopic = copy.deepcopy(foundTopic.get('ui'))
-        if topicHistory:
-            resultTopic['pages'] = topicHistory['pages']
-        return resultTopic
-    return topicHistory
+    resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    if topicHistory:
+        resultTopic['pages'] = topicHistory['pages']
+    return resultTopic
+
+def getTopicPicture(slug):
+    foundTopic = modelapi.getDisplayTopic(slug)
+    if not foundTopic:
+        return None
+    topicHistory = modelapi.getTopicHistory(slug)
+    resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    if topicHistory:
+        resultTopic['pages'] = [ page for page in topicHistory['pages']
+                                    if page['page'].get('editor') and
+                                        page['page'].get('editor').get('img') ]
+    return resultTopic
 
 def _getPagesByTags(pages, tags):
     result = []

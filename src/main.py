@@ -41,6 +41,7 @@ app = webapp2.WSGIApplication([
 ('/d/', headline.handlers.Datasources),
 webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),
 webapp2.Route('/latest/<slug>/', handler=headline.handlers.TopicLatest, name='latest'),
+webapp2.Route('/picture/<slug>/', handler=headline.handlers.TopicPicture, name='picture'),
 webapp2.Route('/source/<sourceId>/', handler=headline.handlers.DatasourceHistory, name='datasource'),
 ],
 debug=True, config=config)

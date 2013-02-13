@@ -10,6 +10,7 @@ def _getMenu():
     topics = hlapi.getTopicsConfig()
     latestMenus = []
     topicMenus = []
+    pictureMenus = []
     for topic in topics:
         topicSlug = topic.get('slug')
         topicName = topic.get('name')
@@ -29,9 +30,16 @@ def _getMenu():
             'name': topicName,
             'url': url,
         })
+
+        url = webapp2.uri_for('picture', slug=topicSlug)
+        pictureMenus.append({
+            'name': topicName,
+            'url': url,
+        })
     return {
             'latest': latestMenus,
             'topic': topicMenus,
+            'picture': pictureMenus,
         }
 
 class MyHandler(BasicHandler):
@@ -90,12 +98,33 @@ class TopicLatest(MyHandler):
         if not self.prepare():
             return
         topic = hlapi.getTopicHistory(slug)
+        if not topic:
+            self.error(404)
+            return
+
         topicUrl = webapp2.uri_for('topic', slug=slug)
         templateValues = {
             'topicUrl': topicUrl,
             'topic': topic,
         }
         self.render(templateValues, 'latest.html')
+
+class TopicPicture(MyHandler):
+
+    def get(self, slug):
+        if not self.prepare():
+            return
+        topic = hlapi.getTopicPicture(slug)
+        if not topic:
+            self.error(404)
+            return
+
+        topicUrl = webapp2.uri_for('topic', slug=slug)
+        templateValues = {
+            'topicUrl': topicUrl,
+            'topic': topic,
+        }
+        self.render(templateValues, 'picture.html')
 
 class Home(MyHandler):
 
