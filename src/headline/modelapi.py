@@ -5,6 +5,7 @@ import logging
 from commonutil import dateutil
 import configmanager.models
 from configmanager import cmapi
+import globalconfig
 
 class LatestItem(configmanager.models.ConfigItem):
     pass
@@ -31,9 +32,14 @@ def updateDatasources(datasource, items):
     data = copy.deepcopy(datasource)
     data['pages'] = copy.deepcopy(items)
 
-    sourceSlug = datasource.get('slug')
-    key = _getDatasourcesKey()
     datasources = getDatasources()
+
+    # clean old datasources
+    days = globalconfig.getDatasourceDays()
+    strStart = dateutil.getHoursAs14(days * 24)
+    datasources = [child for child in datasources
+                    if child['added'] >= strStart]
+
     found = None
     foundIndex = -1
     for i in range(len(datasources)):
@@ -45,13 +51,15 @@ def updateDatasources(datasource, items):
     if foundIndex >= 0:
         foundCounter = found.get('counter')
         dataCounter = datasource.get('counter')
-        if dataCounter is None or foundCounter is None\
+        if dataCounter is None or foundCounter is None \
                 or dataCounter > foundCounter:
             datasources[foundIndex] = data
         elif dataCounter == foundCounter:
             found['pages'].extend(items)
+            found['pages'].sort(key=lambda page: page.get('rank'))
     else:
         datasources.append(data)
+    key = _getDatasourcesKey()
     cmapi.saveItem(key, datasources, modelname=LatestItem)
 
 def _getTopicHistoryKey(topicSlug):

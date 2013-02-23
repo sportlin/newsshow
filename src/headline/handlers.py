@@ -81,7 +81,7 @@ class Topic(MyHandler):
         if not topic:
             self.error(404)
             return
-        for group in topic['groups']:
+        for group in topic.get('groups', []):
             for datasource in group['datasources']:
                 sourceId = datasource.get('id')
                 if sourceId:

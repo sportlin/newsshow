@@ -1,9 +1,12 @@
+import logging
 
 from google.appengine.api import taskqueue
 
 import webapp2
 
 import jsonpickle
+
+from commonutil import networkutil
 
 from . import hlapi
 
@@ -20,6 +23,15 @@ class HeadlineAddResponse(webapp2.RequestHandler):
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'
         data = jsonpickle.decode(self.request.body)
+
+        uuid = data.get('uuid')
+        if networkutil.isUuidHandled(uuid):
+            message = 'HeadlineAddResponse: %s is already handled.' % (uuid, )
+            logging.warn(message)
+            self.response.out.write(message)
+            return
+        networkutil.updateUuids(uuid)
+
         datasource = data['datasource']
         items = data['items']
         hlapi.saveItems(datasource, items)

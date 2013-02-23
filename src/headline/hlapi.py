@@ -39,7 +39,7 @@ def _addTopicPages(topic, datasource, items):
         # remove old duplicated page
         for i in range(len(pages) -1, 0, -1):
             pageItem = pages[i]['page']
-            if pageItem.get('url') == url:
+            if pageItem.get('monitor').get('url') == url:
                 del pages[i]
                 break
 
@@ -60,6 +60,7 @@ def _addTopicPages(topic, datasource, items):
         del pages[i]
 
     savedTopic['pages'] = sorted(pages, key=lambda page:
+                page.get('page').get('monitor').get('published') or
                 page.get('source').get('added'), reverse=True)
 
     modelapi.saveTopicHistory(topicSlug, savedTopic)
@@ -205,20 +206,18 @@ def _populateDatasourceId(datasourceIds, datasources):
             datasource['id'] = datasourceId
 
 def getTopic(topicSlug):
-    topics = modelapi.getDisplayTopics()
     foundTopic = modelapi.getDisplayTopic(topicSlug)
     if not foundTopic:
         return None
     datasources = modelapi.getDatasources()
     defaultGroups = modelapi.getDisplayGroups()
+    resultTopic = resultTopic = copy.deepcopy(foundTopic.get('ui'))
     topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
-    resultTopic = None
     if topicGroups:
         # populate datasource id for datasources, as exposed id.
         datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
         for topicGroup in topicGroups:
             _populateDatasourceId(datasourceIds, topicGroup['datasources'])
-        resultTopic = copy.deepcopy(foundTopic.get('ui'))
         resultTopic['groups'] = topicGroups
     return resultTopic
 
@@ -260,9 +259,11 @@ def getHomeData():
         dpages = datasource['pages']
         del datasource['pages']
         for page in dpages:
+            if not page['monitor'].get('url'):
+                continue
             page['source'] = datasource
-        pages.extend(dpages)
-    pages.sort(key=lambda page: page['source']['added'], reverse=True)
+            pages.append(page)
+    pages.sort(key=lambda page: page['monitor'].get('published') or page['source']['added'], reverse=True)
     latestCount = globalconfig.getTopicHomeLatest()
     topics = modelapi.getDisplayTopics()
     resultTopics = []
