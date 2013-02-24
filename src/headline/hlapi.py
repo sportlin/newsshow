@@ -237,10 +237,17 @@ def getTopicPicture(slug):
         return None
     topicHistory = modelapi.getTopicHistory(slug)
     resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    pages = []
     if topicHistory:
-        resultTopic['pages'] = [ page for page in topicHistory['pages']
-                                    if page['page'].get('editor') and
-                                        page['page'].get('editor').get('img') ]
+        for child in topicHistory['pages']:
+            monitorPage = child['page'].get('monitor')
+            if 'img' in monitorPage:
+                pages.append(monitorPage)
+            else:
+                editorPage = child['page'].get('editor')
+                if 'img' in editorPage:
+                    pages.append(editorPage)
+    resultTopic['pages'] = pages
     return resultTopic
 
 def _getPagesByTags(pages, tags):
