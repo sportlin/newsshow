@@ -28,35 +28,49 @@ def getDatasources():
     datasources = cmapi.getItemValue(key, [], modelname=LatestItem)
     return datasources
 
-def updateDatasources(datasource, items):
-    data = copy.deepcopy(datasource)
-    data['pages'] = copy.deepcopy(items)
-
+def updateDatasources(source, items):
     datasources = getDatasources()
+
+    #TODO: to be removed
+    for i in range(len(datasources)):
+        child = datasources[i]
+        if 'source' not in child:
+            pages = child['pages']
+            del child['pages']
+            datasources[i] = {
+                    'source': child,
+                    'pages': pages,
+                }
 
     # clean old datasources
     days = globalconfig.getDatasourceDays()
     strStart = dateutil.getHoursAs14(days * 24)
     datasources = [child for child in datasources
-                    if child['added'] >= strStart]
+                    if child['source']['added'] >= strStart]
+
+    data = {
+        'source': copy.deepcopy(source),
+        'pages': copy.deepcopy(items),
+    }
 
     found = None
     foundIndex = -1
     for i in range(len(datasources)):
         item = datasources[i]
-        if item.get('slug') == datasource.get('slug'):
+        if item['source'].get('slug') == source.get('slug'):
             foundIndex = i
             found = item
             break
     if foundIndex >= 0:
-        foundCounter = found.get('counter')
-        dataCounter = datasource.get('counter')
+        foundCounter = found['source'].get('counter')
+        dataCounter = source.get('counter')
         if dataCounter is None or foundCounter is None \
                 or dataCounter > foundCounter:
             datasources[foundIndex] = data
         elif dataCounter == foundCounter:
             found['pages'].extend(items)
-            found['pages'].sort(key=lambda page: page.get('rank'))
+            found['pages'].sort(key=lambda page: page.get('monitor') and
+                                    page.get('monitor').get('rank'))
     else:
         datasources.append(data)
     key = _getDatasourcesKey()

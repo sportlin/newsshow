@@ -241,11 +241,11 @@ def getTopicPicture(slug):
     if topicHistory:
         for child in topicHistory['pages']:
             monitorPage = child['page'].get('monitor')
-            if 'img' in monitorPage:
+            if monitorPage and 'img' in monitorPage:
                 pages.append(monitorPage)
             else:
                 editorPage = child['page'].get('editor')
-                if 'img' in editorPage:
+                if editorPage and 'img' in editorPage:
                     pages.append(editorPage)
     resultTopic['pages'] = pages
     return resultTopic
@@ -263,14 +263,23 @@ def getHomeData():
     datasources = modelapi.getDatasources()
     pages = []
     for datasource in datasources:
-        dpages = datasource['pages']
-        del datasource['pages']
-        for page in dpages:
-            if not page['monitor'].get('url'):
+        for childPage in datasource['pages']:
+            monitorPage = childPage.get('monitor')
+            if not monitorPage or not monitorPage.get('url'):
                 continue
-            page['source'] = datasource
-            pages.append(page)
-    pages.sort(key=lambda page: page['monitor'].get('published') or page['source']['added'], reverse=True)
+            if 'title' in monitorPage:
+                page = monitorPage
+            else:
+                editorPage = childPage.get('editor')
+                if editorPage:
+                    page = editorPage
+                else:
+                    page = None
+            if page:
+                page['source'] = datasource['source']
+                pages.append(page)
+    pages.sort(key=lambda page: (page['source'].get('charts') and page.get('published'))
+                or page['source']['added'], reverse=True)
     latestCount = globalconfig.getTopicHomeLatest()
     topics = modelapi.getDisplayTopics()
     resultTopics = []
