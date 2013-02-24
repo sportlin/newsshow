@@ -97,18 +97,18 @@ def _isTagsMatch(criterionTags, tags):
 def _getDatasourcesByTags(datasources, tags):
     result = []
     for datasource in datasources:
-        datasourceTags = datasource.get('tags', [])
+        datasourceTags = datasource.get('source').get('tags', [])
         if not tags:
             continue
         if not _isTagsMatch(tags, datasourceTags):
             continue
-        result.append(copy.deepcopy(datasource))
+        result.append(datasource)
     return result
 
 def _getUnmatchedDatasources(datasources, items):
     result = []
     for datasource in datasources:
-        datasourceTags = datasource.get('tags', [])
+        datasourceTags = datasource.get('source').get('tags', [])
         matched = False
         for item in items:
             tags = item.get('tags')
@@ -118,7 +118,7 @@ def _getUnmatchedDatasources(datasources, items):
                 matched = True
                 break
         if not matched:
-            result.append(copy.deepcopy(datasource))
+            result.append(datasource)
     if result:
         result = _sortDatasources(result, orderField='added', reverse=True)
     return result
@@ -176,7 +176,7 @@ def getTopics():
     for topic in topics:
         topicGroups = _getTopicGroups(topic, datasources, defaultGroups)
         if topicGroups:
-            resultTopic = copy.deepcopy(topic.get('ui'))
+            resultTopic = topic.get('ui')
             resultTopic['groups'] = topicGroups
             resultTopics.append(resultTopic)
 
@@ -193,17 +193,26 @@ def getTopics():
                 }
         ]}
         resultTopics.append(unknownTopic)
+    datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
+    for topic in resultTopics:
+        # populate datasource id for datasources, as exposed id.
+        topicGroups = topic.get('groups')
+        for topicGroup in topicGroups:
+            _prepareDatasource4Show(datasourceIds, topicGroup['datasources'])
 
     return resultTopics
 
 def getTopicsConfig():
     return [topic.get('ui') for topic in modelapi.getDisplayTopics()]
 
-def _populateDatasourceId(datasourceIds, datasources):
+def _prepareDatasource4Show(datasourceIds, datasources):
     for datasource in datasources:
-        datasourceId = datasourceIds.get(datasource.get('slug'))
+        datasourceId = datasourceIds.get(datasource['source'].get('slug'))
         if datasourceId:
-            datasource['id'] = datasourceId
+            datasource['source']['id'] = datasourceId
+        pages = datasource['pages']
+        if pages:
+            datasource['pages'] = [ page['monitor'] for page in pages ]
 
 def getTopic(topicSlug):
     foundTopic = modelapi.getDisplayTopic(topicSlug)
@@ -211,13 +220,13 @@ def getTopic(topicSlug):
         return None
     datasources = modelapi.getDatasources()
     defaultGroups = modelapi.getDisplayGroups()
-    resultTopic = resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    resultTopic = resultTopic = foundTopic.get('ui')
     topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
     if topicGroups:
         # populate datasource id for datasources, as exposed id.
         datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
         for topicGroup in topicGroups:
-            _populateDatasourceId(datasourceIds, topicGroup['datasources'])
+            _prepareDatasource4Show(datasourceIds, topicGroup['datasources'])
         resultTopic['groups'] = topicGroups
     return resultTopic
 
@@ -226,9 +235,15 @@ def getTopicHistory(slug):
     if not foundTopic:
         return None
     topicHistory = modelapi.getTopicHistory(slug)
-    resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    resultTopic = foundTopic.get('ui')
     if topicHistory:
-        resultTopic['pages'] = topicHistory['pages']
+        pages = []
+        for child in topicHistory['pages']:
+            editorPage = child['page'].get('editor')
+            if editorPage:
+                editorPage['source'] = child['source']
+                pages.append(editorPage)
+        resultTopic['pages'] = pages
     return resultTopic
 
 def getTopicPicture(slug):
@@ -236,7 +251,7 @@ def getTopicPicture(slug):
     if not foundTopic:
         return None
     topicHistory = modelapi.getTopicHistory(slug)
-    resultTopic = copy.deepcopy(foundTopic.get('ui'))
+    resultTopic = foundTopic.get('ui')
     pages = []
     if topicHistory:
         for child in topicHistory['pages']:
@@ -256,7 +271,7 @@ def _getPagesByTags(pages, tags):
         pageTags = page.get('source').get('tags', [])
         if not _isTagsMatch(tags, pageTags):
             continue
-        result.append(copy.deepcopy(page))
+        result.append(page)
     return result
 
 def getHomeData():
@@ -290,7 +305,7 @@ def getHomeData():
         topicPages = _getPagesByTags(pages, topicTags)
         if not topicPages:
             continue
-        resultTopic = copy.deepcopy(topic.get('ui'))
+        resultTopic = topic.get('ui')
         resultTopic['pages'] = topicPages[:latestCount]
         resultTopics.append(resultTopic)
     return {
@@ -304,16 +319,20 @@ def getDatasourceHistory(sourceId):
     topicSlug = datasource.get('topic')
     sourceSlug = datasource.get('slug')
     topicHistory = modelapi.getTopicHistory(topicSlug)
-    foundTopic = modelapi.getDisplayTopic(topicSlug)
     if topicHistory:
-        pages = topicHistory['pages']
-        pages = [page for page in pages
-                    if page['source'].get('slug') == sourceSlug]
-        if pages:
-            datasource['name'] = pages[0]['source']['name']
-        datasource['pages'] =  [page['page'] for page in pages]
+        pages = []
+        for child in topicHistory['pages']:
+            if child['source'].get('slug') == sourceSlug:
+                if 'name' not in datasource:
+                    datasource['name'] = child['source']['name']
+                editorPage = child['page']['editor']
+                pages.append(editorPage)
+        datasource['pages'] =  pages
+
+    foundTopic = modelapi.getDisplayTopic(topicSlug)
     if foundTopic:
         datasource['topicName'] = foundTopic['ui']['name']
+
     return datasource
 
 def getDisplayDatasources():
@@ -331,15 +350,16 @@ def getUnexposedDatasources():
             return None
         topicDatasources = _getDatasourcesByTags(datasources, topicTags)
         for datasource in topicDatasources:
-            if datasource.get('slug') in datasourceIds:
+            source = datasource['source']
+            if source.get('slug') in datasourceIds:
                 continue
             suggestId = ''
-            parts = datasource['slug'].split('.')
+            parts = source['slug'].split('.')
             if len(parts) > 1:
                 suggestId = parts[1]
             result.append({
-                'slug': datasource['slug'],
-                'name': datasource['name'],
+                'slug': source['slug'],
+                'name': source['name'],
                 'topic': topic['slug'],
                 'id': suggestId,
             })

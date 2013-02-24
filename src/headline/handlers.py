@@ -83,9 +83,9 @@ class Topic(MyHandler):
             return
         for group in topic.get('groups', []):
             for datasource in group['datasources']:
-                sourceId = datasource.get('id')
+                sourceId = datasource['source'].get('id')
                 if sourceId:
-                    datasource['history'] = webapp2.uri_for('datasource',
+                    datasource['source']['history'] = webapp2.uri_for('datasource',
                         sourceId=sourceId)
         templateValues = {
             'topic': topic,
