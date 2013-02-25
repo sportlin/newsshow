@@ -62,12 +62,12 @@ def updateDatasources(source, items):
             found = item
             break
     if foundIndex >= 0:
-        foundCounter = found['source'].get('counter')
-        dataCounter = source.get('counter')
-        if dataCounter is None or foundCounter is None \
-                or dataCounter > foundCounter:
+        foundAdded = found['source'].get('added')
+        dataAdded = source.get('added')
+        if dataAdded is None or foundAdded is None \
+                or dataAdded > foundAdded:
             datasources[foundIndex] = data
-        elif dataCounter == foundCounter:
+        elif dataAdded == foundAdded:
             found['pages'].extend(items)
             found['pages'].sort(key=lambda page: page.get('monitor') and
                                     page.get('monitor').get('rank'))
