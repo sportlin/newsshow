@@ -239,9 +239,15 @@ def getTopicHistory(slug):
     if topicHistory:
         pages = []
         for child in topicHistory['pages']:
+            monitorPage = child['page'].get('monitor')
             editorPage = child['page'].get('editor')
             if editorPage:
                 editorPage['source'] = child['source']
+                if monitorPage:
+                    if 'keyword' in monitorPage:
+                        editorPage['keyword'] = monitorPage['keyword']
+                    if 'rank' in monitorPage:
+                        editorPage['rank'] = monitorPage['rank']
                 pages.append(editorPage)
         resultTopic['pages'] = pages
     return resultTopic
@@ -281,6 +287,8 @@ def getHomeData():
         for childPage in datasource['pages']:
             monitorPage = childPage.get('monitor')
             if not monitorPage or not monitorPage.get('url'):
+                continue
+            if datasource['source'].get('charts') and not monitorPage.get('published'):
                 continue
             if 'title' in monitorPage:
                 page = monitorPage
