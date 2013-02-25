@@ -37,11 +37,10 @@ def _addTopicPages(topic, datasource, items):
             continue
 
         # remove old duplicated page
-        for i in range(len(pages) -1, 0, -1):
+        for i in range(len(pages) - 1, -1, -1):
             pageItem = pages[i]['page']
             if pageItem.get('monitor').get('url') == url:
                 del pages[i]
-                break
 
         # insert the latest page at top
         data = {
@@ -53,11 +52,10 @@ def _addTopicPages(topic, datasource, items):
 
     # clean old pages
     strStart = dateutil.getHoursAs14(historyHours)
-    for i in range(len(pages) -1, 0, -1):
+    for i in range(len(pages) - 1, -1, -1):
         pageSource = pages[i].get('source')
-        if pageSource and pageSource.get('added') >= strStart:
-            break
-        del pages[i]
+        if not pageSource or pageSource.get('added') < strStart:
+            del pages[i]
 
     savedTopic['pages'] = sorted(pages, key=lambda page:
                 page.get('page').get('monitor').get('published') or
