@@ -10,6 +10,8 @@ import configmanager.handlers
 import headline.handlersadmin
 import headline.handlersapi
 import headline.handlers
+import sourcenow.handlers
+import sourcehistory.handlers
 
 import globalconfig
 
@@ -37,11 +39,11 @@ app = webapp2.WSGIApplication([
 ('/admin/datasource/expose/', headline.handlersadmin.DatasourceExpose),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
-('/t/', headline.handlers.Topics),
 ('/d/', headline.handlers.Datasources),
-webapp2.Route('/topic/<slug>/', handler=headline.handlers.Topic, name='topic'),
-webapp2.Route('/latest/<slug>/', handler=headline.handlers.TopicLatest, name='latest'),
-webapp2.Route('/picture/<slug>/', handler=headline.handlers.TopicPicture, name='picture'),
+webapp2.Route('/topic/<slug>/', handler=sourcenow.handlers.TopicStatus, name='topic.status'),
+webapp2.Route('/topic/source/<slug>/', handler=sourcenow.handlers.TopicGroup, name='topic.source'),
+webapp2.Route('/topic/history/<slug>/', handler=sourcehistory.handlers.TopicHistory, name='topic.history'),
+webapp2.Route('/topic/picture/<slug>/', handler=sourcehistory.handlers.TopicPicture, name='topic.picture'),
 webapp2.Route('/source/<sourceId>/', handler=headline.handlers.DatasourceHistory, name='datasource'),
 ],
 debug=True, config=config)

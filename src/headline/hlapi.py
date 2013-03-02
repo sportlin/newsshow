@@ -3,9 +3,10 @@ import datetime
 import logging
 
 from commonutil import stringutil
-from commonutil import dateutil
+from commonutil import dateutil, collectionutil
 import globalconfig
 from . import modelapi
+import sourcenow.bs as bsNow
 
 def saveItems(datasource, items):
     topics = modelapi.getDisplayTopics()
@@ -72,7 +73,7 @@ def _addTopicsPages(topics, datasource, items):
         topicTags = topic.get('tags')
         if not topicTags:
             continue
-        if not _isTagsMatch(topicTags, datasourceTags):
+        if not collectionutil.fullContains(datasourceTags, topicTags):
             continue
         _addTopicPages(topic, datasource, items)
 
@@ -92,182 +93,8 @@ def _isTagsMatch(criterionTags, tags):
             break
     return matched
 
-def _getDatasourcesByTags(datasources, tags):
-    result = []
-    for datasource in datasources:
-        datasourceTags = datasource.get('source').get('tags', [])
-        if not tags:
-            continue
-        if not _isTagsMatch(tags, datasourceTags):
-            continue
-        result.append(datasource)
-    return result
-
-def _getUnmatchedDatasources(datasources, items):
-    result = []
-    for datasource in datasources:
-        datasourceTags = datasource.get('source').get('tags', [])
-        matched = False
-        for item in items:
-            tags = item.get('tags')
-            if not tags:
-                continue
-            if _isTagsMatch(tags, datasourceTags):
-                matched = True
-                break
-        if not matched:
-            result.append(datasource)
-    if result:
-        result = _sortDatasources(result, orderField='added', reverse=True)
-    return result
-
-def _sortDatasources(datasources, orderField='order', reverse=False):
-    return sorted(datasources, key=lambda source:
-                source.get(orderField) if source.get(orderField)
-                else stringutil.getMaxOrder(), reverse=reverse)
-
-def _getTopicGroups(topic, datasources, defaultGroups):
-    topicTags = topic.get('tags')
-    if not topicTags:
-        return None
-    topicDatasources = _getDatasourcesByTags(datasources, topicTags)
-    if not topicDatasources:
-        return None
-    groups = topic.get('groups')
-    if groups is None:
-        if defaultGroups:
-            groups = defaultGroups
-        else:
-            groups = []
-    topicGroups = []
-    for group in groups:
-        groupTags = group.get('tags')
-        if not groupTags:
-            continue
-        groupDatasources = _getDatasourcesByTags(topicDatasources, groupTags)
-        if not groupDatasources:
-            continue
-        topicGroup = {}
-        topicGroup['slug'] = group.get('slug')
-        topicGroup['name'] = group.get('name')
-        topicGroup['datasources'] = _sortDatasources(groupDatasources,
-                                        orderField='added', reverse=True)
-        topicGroups.append(topicGroup)
-
-    unmatched = _getUnmatchedDatasources(topicDatasources, groups)
-    if unmatched:
-        unknownGroup = {
-            'slug': 'unknown',
-            'name': '',
-            'datasources': unmatched,
-        }
-        topicGroups.append(unknownGroup)
-
-    return topicGroups
-
-# topic/group/source/page
-def getTopics():
-    datasources = modelapi.getDatasources()
-    defaultGroups = modelapi.getDisplayGroups()
-    topics = modelapi.getDisplayTopics()
-    resultTopics = []
-    for topic in topics:
-        topicGroups = _getTopicGroups(topic, datasources, defaultGroups)
-        if topicGroups:
-            resultTopic = topic.get('ui')
-            resultTopic['groups'] = topicGroups
-            resultTopics.append(resultTopic)
-
-    unmatched = _getUnmatchedDatasources(datasources, topics)
-    if unmatched:
-        unknownTopic = {
-            'slug': 'unknown',
-            'name': '',
-            'groups': [
-                {
-                    'slug': 'unknown',
-                    'name': '',
-                    'datasources': unmatched,
-                }
-        ]}
-        resultTopics.append(unknownTopic)
-    datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
-    for topic in resultTopics:
-        # populate datasource id for datasources, as exposed id.
-        topicGroups = topic.get('groups')
-        for topicGroup in topicGroups:
-            _prepareDatasource4Show(datasourceIds, topicGroup['datasources'])
-
-    return resultTopics
-
 def getTopicsConfig():
     return [topic.get('ui') for topic in modelapi.getDisplayTopics()]
-
-def _prepareDatasource4Show(datasourceIds, datasources):
-    for datasource in datasources:
-        datasourceId = datasourceIds.get(datasource['source'].get('slug'))
-        if datasourceId:
-            datasource['source']['id'] = datasourceId
-        pages = datasource['pages']
-        if pages:
-            datasource['pages'] = [ page['monitor'] for page in pages ]
-
-def getTopic(topicSlug):
-    foundTopic = modelapi.getDisplayTopic(topicSlug)
-    if not foundTopic:
-        return None
-    datasources = modelapi.getDatasources()
-    defaultGroups = modelapi.getDisplayGroups()
-    resultTopic = resultTopic = foundTopic.get('ui')
-    topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
-    if topicGroups:
-        # populate datasource id for datasources, as exposed id.
-        datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
-        for topicGroup in topicGroups:
-            _prepareDatasource4Show(datasourceIds, topicGroup['datasources'])
-        resultTopic['groups'] = topicGroups
-    return resultTopic
-
-def getTopicHistory(slug):
-    foundTopic = modelapi.getDisplayTopic(slug)
-    if not foundTopic:
-        return None
-    topicHistory = modelapi.getTopicHistory(slug)
-    resultTopic = foundTopic.get('ui')
-    if topicHistory:
-        pages = []
-        for child in topicHistory['pages']:
-            monitorPage = child['page'].get('monitor')
-            editorPage = child['page'].get('editor')
-            if editorPage:
-                editorPage['source'] = child['source']
-                if monitorPage:
-                    if 'keyword' in monitorPage:
-                        editorPage['keyword'] = monitorPage['keyword']
-                    if 'rank' in monitorPage:
-                        editorPage['rank'] = monitorPage['rank']
-                pages.append(editorPage)
-        resultTopic['pages'] = pages
-    return resultTopic
-
-def getTopicPicture(slug):
-    foundTopic = modelapi.getDisplayTopic(slug)
-    if not foundTopic:
-        return None
-    topicHistory = modelapi.getTopicHistory(slug)
-    resultTopic = foundTopic.get('ui')
-    pages = []
-    if topicHistory:
-        for child in topicHistory['pages']:
-            monitorPage = child['page'].get('monitor')
-            if monitorPage and 'img' in monitorPage:
-                pages.append(monitorPage)
-            else:
-                editorPage = child['page'].get('editor')
-                if editorPage and 'img' in editorPage:
-                    pages.append(editorPage)
-    resultTopic['pages'] = pages
-    return resultTopic
 
 def _getPagesByTags(pages, tags):
     result = []
@@ -354,7 +181,7 @@ def getUnexposedDatasources():
         topicTags = topic.get('tags')
         if not topicTags:
             return None
-        topicDatasources = _getDatasourcesByTags(datasources, topicTags)
+        topicDatasources = bsNow.getDatasourcesByTags(datasources, topicTags)
         for datasource in topicDatasources:
             source = datasource['source']
             if source.get('slug') in datasourceIds:

@@ -6,11 +6,9 @@ import globalconfig
 
 from . import hlapi
 
-def _getMenu():
+def _getMenu(topicShowtype, selectedSlug):
     topics = hlapi.getTopicsConfig()
-    latestMenus = []
     topicMenus = []
-    pictureMenus = []
     for topic in topics:
         topicSlug = topic.get('slug')
         topicName = topic.get('name')
@@ -18,48 +16,44 @@ def _getMenu():
             continue
         if not topicName:
             continue
-
-        url = webapp2.uri_for('latest', slug=topicSlug)
-        latestMenus.append({
-            'name': topicName,
-            'url': url,
-        })
-
-        url = webapp2.uri_for('topic', slug=topicSlug)
+        if topicShowtype == 'source':
+            topicHandlerName = 'topic.source'
+        elif topicShowtype == 'history':
+            topicHandlerName = 'topic.history'
+        elif topicShowtype == 'picture':
+            topicHandlerName = 'topic.picture'
+        else:
+            topicHandlerName = 'topic.status'
+        url = webapp2.uri_for(topicHandlerName, slug=topicSlug)
         topicMenus.append({
             'name': topicName,
             'url': url,
+            'selected': selectedSlug == topicSlug,
         })
-
-        url = webapp2.uri_for('picture', slug=topicSlug)
-        pictureMenus.append({
-            'name': topicName,
-            'url': url,
-        })
-    return {
-            'latest': latestMenus,
-            'topic': topicMenus,
-            'picture': pictureMenus,
-        }
+    return topicMenus
 
 class MyHandler(BasicHandler):
+    topicSlug = None
+    topicShowtype = None
+
     def prepareBaseValues(self):
         self.site = globalconfig.getSiteConfig()
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        self.extraValues['menu'] = _getMenu()
+        self.extraValues['menu'] = _getMenu(self.topicShowtype, self.topicSlug)
 
-class Topics(MyHandler):
+class TopicHandler(MyHandler):
 
-    def get(self):
-        if not self.prepare():
-            return
-        topics = hlapi.getTopics()
-        templateValues = {
-            'topics': topics,
-        }
-        self.render(templateValues, 'topics.html')
+    def prepareValues(self):
+        super(TopicHandler, self).prepareValues()
+        slug = self.topicSlug
+        self.extraValues['topicUrls'] = {
+                'status': webapp2.uri_for('topic.status', slug=slug),
+                'source': webapp2.uri_for('topic.source', slug=slug),
+                'history': webapp2.uri_for('topic.history', slug=slug),
+                'picture': webapp2.uri_for('topic.picture', slug=slug),
+            }
 
 class Datasources(MyHandler):
 
@@ -72,60 +66,6 @@ class Datasources(MyHandler):
         }
         self.render(templateValues, 'datasources.html')
 
-class Topic(MyHandler):
-
-    def get(self, slug):
-        if not self.prepare():
-            return
-        topic = hlapi.getTopic(slug)
-        if not topic:
-            self.error(404)
-            return
-        for group in topic.get('groups', []):
-            for datasource in group['datasources']:
-                sourceId = datasource['source'].get('id')
-                if sourceId:
-                    datasource['source']['history'] = webapp2.uri_for('datasource',
-                        sourceId=sourceId)
-        templateValues = {
-            'topic': topic,
-        }
-        self.render(templateValues, 'topic.html')
-
-class TopicLatest(MyHandler):
-
-    def get(self, slug):
-        if not self.prepare():
-            return
-        topic = hlapi.getTopicHistory(slug)
-        if not topic:
-            self.error(404)
-            return
-
-        topicUrl = webapp2.uri_for('topic', slug=slug)
-        templateValues = {
-            'topicUrl': topicUrl,
-            'topic': topic,
-        }
-        self.render(templateValues, 'latest.html')
-
-class TopicPicture(MyHandler):
-
-    def get(self, slug):
-        if not self.prepare():
-            return
-        topic = hlapi.getTopicPicture(slug)
-        if not topic:
-            self.error(404)
-            return
-
-        topicUrl = webapp2.uri_for('topic', slug=slug)
-        templateValues = {
-            'topicUrl': topicUrl,
-            'topic': topic,
-        }
-        self.render(templateValues, 'picture.html')
-
 class Home(MyHandler):
 
     def get(self):
@@ -135,8 +75,7 @@ class Home(MyHandler):
         for topic in homeData['topics']:
             topicSlug = topic.get('slug')
             topic['url'] = {
-                'topic': webapp2.uri_for('topic', slug=topicSlug),
-                'latest': webapp2.uri_for('latest', slug=topicSlug),
+                'topic': webapp2.uri_for('topic.status', slug=topicSlug),
             }
         templateValues = {
             'homeData': homeData,
@@ -154,7 +93,7 @@ class DatasourceHistory(MyHandler):
             self.error(404)
             return
 
-        datasource['topicLink'] = webapp2.uri_for('topic',
+        datasource['topicLink'] = webapp2.uri_for('topic.status',
                     slug=datasource['topic'])
         templateValues = {
             'datasource': datasource,
