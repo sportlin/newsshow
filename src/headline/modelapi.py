@@ -94,6 +94,9 @@ def getDisplayTopics():
 def getDisplayGroups():
     return cmapi.getItemValue('display.groups', [], modelname=DisplayItem)
 
+def getTopicGroups(topicSlug):
+    return cmapi.getItemValue('display.groups.' + topicSlug, [], modelname=DisplayItem)
+
 def getDisplayTopic(topicSlug):
     foundTopic = None
     for topic in getDisplayTopics():

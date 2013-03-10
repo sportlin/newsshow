@@ -61,9 +61,12 @@ def getTopicGroup(topicSlug):
     if not foundTopic:
         return None
     datasources = modelapi.getDatasources()
-    defaultGroups = modelapi.getDisplayGroups()
+    groups = modelapi.getTopicGroups(topicSlug)
+    if not groups:
+        groups = modelapi.getDisplayGroups()
+
     resultTopic = resultTopic = foundTopic.get('ui')
-    topicGroups = _getTopicGroups(foundTopic, datasources, defaultGroups)
+    topicGroups = _getTopicGroups(foundTopic, datasources, groups)
     if topicGroups:
         # populate datasource id for datasources, as exposed id.
         datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
@@ -106,20 +109,13 @@ def _sortDatasources(datasources, orderField='order', reverse=False):
                 source.get(orderField) if source.get(orderField)
                 else stringutil.getMaxOrder(), reverse=reverse)
 
-
-def _getTopicGroups(topic, datasources, defaultGroups):
+def _getTopicGroups(topic, datasources, groups):
     topicTags = topic.get('tags')
     if not topicTags:
         return None
     topicDatasources = getDatasourcesByTags(datasources, topicTags)
     if not topicDatasources:
         return None
-    groups = topic.get('groups')
-    if groups is None:
-        if defaultGroups:
-            groups = defaultGroups
-        else:
-            groups = []
     topicGroups = []
     for group in groups:
         groupTags = group.get('tags')
