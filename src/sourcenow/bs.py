@@ -20,22 +20,8 @@ def getTopicStatus(topicSlug):
     pages = []
     for datasource in datasources:
         for childPage in datasource['pages']:
-            monitorPage = childPage.get('monitor')
-            if not monitorPage or not monitorPage.get('url'):
-                continue
-            if datasource['source'].get('charts') and not monitorPage.get('published'):
-                continue
-            if 'title' in monitorPage:
-                page = monitorPage
-            else:
-                editorPage = childPage.get('editor')
-                if editorPage:
-                    page = editorPage
-                else:
-                    page = None
-            if page:
-                page['source'] = datasource['source']
-                pages.append(page)
+            childPage['source'] = datasource['source']
+            pages.append(childPage)
     pages.sort(key=lambda page: (page['source'].get('charts') and page.get('published'))
                 or page['source']['added'], reverse=True)
 
@@ -53,8 +39,6 @@ def _prepareDatasource4Show(datasourceIds, datasources):
         if datasourceId:
             datasource['source']['id'] = datasourceId
         pages = datasource['pages']
-        if pages:
-            datasource['pages'] = [ page['monitor'] for page in pages ]
 
 def getTopicGroup(topicSlug):
     foundTopic = modelapi.getDisplayTopic(topicSlug)

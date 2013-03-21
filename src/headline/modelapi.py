@@ -30,18 +30,6 @@ def getDatasources():
 
 def updateDatasources(source, items):
     datasources = getDatasources()
-
-    #TODO: to be removed
-    for i in range(len(datasources)):
-        child = datasources[i]
-        if 'source' not in child:
-            pages = child['pages']
-            del child['pages']
-            datasources[i] = {
-                    'source': child,
-                    'pages': pages,
-                }
-
     # clean old datasources
     days = globalconfig.getDatasourceDays()
     strStart = dateutil.getHoursAs14(days * 24)
@@ -69,8 +57,7 @@ def updateDatasources(source, items):
             datasources[foundIndex] = data
         elif dataAdded == foundAdded:
             found['pages'].extend(items)
-            found['pages'].sort(key=lambda page: page.get('monitor') and
-                                    page.get('monitor').get('rank'))
+            found['pages'].sort(key=lambda page: page.get('rank'))
     else:
         datasources.append(data)
     key = _getDatasourcesKey()
@@ -128,4 +115,24 @@ def getDisplayDatasourceById(itemId):
         if item.get('id') == itemId:
             return item
     return None
+
+def cleanData():
+    datasources = getDatasources()
+    for child in datasources:
+        for i, page in enumerate(child['pages']):
+            monitorPage = page.get('monitor')
+            editorPage = page.get('editor')
+            if not monitorPage and not editorPage:
+                continue
+            child['pages'][i] = {
+                    'added': child['source'].get('added'),
+                    'url': monitorPage.get('url') or editorPage.get('url'),
+                    'title': monitorPage.get('title') or editorPage.get('title'),
+                    'published': monitorPage.get('published') or editorPage.get('published'),
+                    'content': monitorPage.get('content') or editorPage.get('content'),
+                    'img': monitorPage.get('img') or editorPage.get('img'),
+                }
+
+    key = _getDatasourcesKey()
+    cmapi.saveItem(key, datasources, modelname=LatestItem)
 

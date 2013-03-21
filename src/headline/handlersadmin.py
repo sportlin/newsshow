@@ -4,13 +4,14 @@ from templateutil.handlers import BasicHandler
 
 import globalconfig
 
-from . import hlapi
+from . import hlapi, modelapi
 
 class MyHandler(BasicHandler):
 
     def prepareBaseValues(self):
         self.site = globalconfig.getSiteConfig()
         self.i18n = globalconfig.getI18N()
+
 
 class DatasourceExpose(MyHandler):
 
@@ -38,4 +39,13 @@ class DatasourceExpose(MyHandler):
             if sourceId:
                 hlapi.closeDatasource(sourceId)
         self.get()
+
+
+class CleanData(MyHandler):
+
+    def get(self):
+        if not self.prepare():
+            return
+        modelapi.cleanData()
+        self.response.out.write('Cleaned.')
 

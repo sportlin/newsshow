@@ -9,73 +9,7 @@ from . import modelapi
 import sourcenow.bs as bsNow
 
 def saveItems(datasource, items):
-    topics = modelapi.getDisplayTopics()
     modelapi.updateDatasources(datasource, items)
-    _addTopicsPages(topics, datasource, items)
-
-def _addTopicPages(topic, datasource, items):
-    if isinstance(topic, basestring):
-        topicSlug = topic
-        topic = {}
-    else:
-        topicSlug = topic.get('slug')
-        if topicSlug is None:
-            topicSlug = ''
-    historyHours = globalconfig.getTopicHistoryHours()
-    savedTopic = modelapi.getTopicHistory(topicSlug)
-
-    pages = savedTopic.get('pages')
-    if pages is None:
-        pages = []
-        savedTopic['pages'] = pages
-
-    for item in items:
-        monitorPage = item.get('monitor')
-        if not monitorPage:
-            continue
-        url = monitorPage.get('url')
-        if not url:
-            continue
-
-        # remove old duplicated page
-        for i in range(len(pages) - 1, -1, -1):
-            pageItem = pages[i]['page']
-            if pageItem.get('monitor').get('url') == url:
-                del pages[i]
-
-        # insert the latest page at top
-        data = {
-            'page': copy.deepcopy(item),
-            'source': copy.deepcopy(datasource),
-        }
-
-        pages.insert(0, data)
-
-    # clean old pages
-    strStart = dateutil.getHoursAs14(historyHours)
-    for i in range(len(pages) - 1, -1, -1):
-        pageSource = pages[i].get('source')
-        if not pageSource or pageSource.get('added') < strStart:
-            del pages[i]
-
-    savedTopic['pages'] = sorted(pages, key=lambda page:
-                page.get('page').get('monitor').get('published') or
-                page.get('source').get('added'), reverse=True)
-
-    modelapi.saveTopicHistory(topicSlug, savedTopic)
-
-def _addTopicsPages(topics, datasource, items):
-    datasourceTags = datasource.get('tags', [])
-    for topic in topics:
-        topicSlug = topic.get('slug')
-        if not topicSlug:
-            continue
-        topicTags = topic.get('tags')
-        if not topicTags:
-            continue
-        if not collectionutil.fullContains(datasourceTags, topicTags):
-            continue
-        _addTopicPages(topic, datasource, items)
 
 def getDatasources():
     datasources = modelapi.getDatasources()
@@ -110,22 +44,10 @@ def getHomeData():
     pages = []
     for datasource in datasources:
         for childPage in datasource['pages']:
-            monitorPage = childPage.get('monitor')
-            if not monitorPage or not monitorPage.get('url'):
+            if 'added' not in childPage:
                 continue
-            if datasource['source'].get('charts') and not monitorPage.get('published'):
-                continue
-            if 'title' in monitorPage:
-                page = monitorPage
-            else:
-                editorPage = childPage.get('editor')
-                if editorPage:
-                    page = editorPage
-                else:
-                    page = None
-            if page:
-                page['source'] = datasource['source']
-                pages.append(page)
+            childPage['source'] = datasource['source']
+            pages.append(childPage)
     pages.sort(key=lambda page: (page['source'].get('charts') and page.get('published'))
                 or page['source']['added'], reverse=True)
     latestCount = globalconfig.getTopicHomeLatest()

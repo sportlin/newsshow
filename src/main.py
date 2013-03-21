@@ -37,6 +37,7 @@ app = webapp2.WSGIApplication([
 ('/hello/', MainPage),
 ('/configitem/', configmanager.handlers.MainPage),
 ('/admin/datasource/expose/', headline.handlersadmin.DatasourceExpose),
+('/admin/clean/', headline.handlersadmin.CleanData),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 ('/d/', headline.handlers.Datasources),
