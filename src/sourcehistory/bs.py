@@ -1,26 +1,8 @@
 from headline import modelapi
+from . import models
 
-def getTopicHistory(slug):
-    foundTopic = modelapi.getDisplayTopic(slug)
-    if not foundTopic:
-        return None
-    topicHistory = modelapi.getTopicHistory(slug)
-    resultTopic = foundTopic.get('ui')
-    if topicHistory:
-        pages = []
-        for child in topicHistory['pages']:
-            monitorPage = child['page'].get('monitor')
-            editorPage = child['page'].get('editor')
-            if editorPage:
-                editorPage['source'] = child['source']
-                if monitorPage:
-                    if 'keyword' in monitorPage:
-                        editorPage['keyword'] = monitorPage['keyword']
-                    if 'rank' in monitorPage:
-                        editorPage['rank'] = monitorPage['rank']
-                pages.append(editorPage)
-        resultTopic['pages'] = pages
-    return resultTopic
+def getDatasourceHistory(slug):
+    return models.getDatasourceHistory(slug)
 
 def getTopicPicture(slug):
     foundTopic = modelapi.getDisplayTopic(slug)

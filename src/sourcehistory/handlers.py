@@ -4,25 +4,23 @@ from templateutil.handlers import BasicHandler
 
 import globalconfig
 
-from headline.handlers import TopicHandler
+from headline.handlers import MyHandler, TopicHandler
 from sourcehistory import bs as bsHistory
 
-class TopicHistory(TopicHandler):
+class DatasourceHistory(MyHandler):
 
     def get(self, slug):
-        self.topicShowtype = 'history'
-        self.topicSlug = slug
         if not self.prepare():
             return
-        topic = bsHistory.getTopicHistory(slug)
-        if not topic:
+        datasource = bsHistory.getDatasourceHistory(slug)
+        if not datasource:
             self.error(404)
             return
 
         templateValues = {
-            'topic': topic,
+            'datasource': datasource,
         }
-        self.render(templateValues, 'topic-history.html')
+        self.render(templateValues, 'datasource-history.html')
 
 class TopicPicture(TopicHandler):
 

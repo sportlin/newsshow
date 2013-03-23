@@ -40,12 +40,11 @@ app = webapp2.WSGIApplication([
 ('/admin/clean/', headline.handlersadmin.CleanData),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
-('/d/', headline.handlers.Datasources),
 webapp2.Route('/topic/<slug>/', handler=sourcenow.handlers.TopicStatus, name='topic.status'),
 webapp2.Route('/topic/source/<slug>/', handler=sourcenow.handlers.TopicGroup, name='topic.source'),
-webapp2.Route('/topic/history/<slug>/', handler=sourcehistory.handlers.TopicHistory, name='topic.history'),
 webapp2.Route('/topic/picture/<slug>/', handler=sourcehistory.handlers.TopicPicture, name='topic.picture'),
 webapp2.Route('/source/<sourceId>/', handler=headline.handlers.DatasourceHistory, name='datasource'),
+webapp2.Route('/d/<slug>', handler=sourcehistory.handlers.DatasourceHistory, name='datasource.history'),
 ],
 debug=True, config=config)
 

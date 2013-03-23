@@ -51,7 +51,6 @@ class TopicHandler(MyHandler):
         self.extraValues['topicUrls'] = {
                 'status': webapp2.uri_for('topic.status', slug=slug),
                 'source': webapp2.uri_for('topic.source', slug=slug),
-                'history': webapp2.uri_for('topic.history', slug=slug),
                 'picture': webapp2.uri_for('topic.picture', slug=slug),
             }
 

@@ -5,11 +5,12 @@ import logging
 from commonutil import stringutil
 from commonutil import dateutil, collectionutil
 import globalconfig
-from . import modelapi
+from . import modelapi, datareceiver
 import sourcenow.bs as bsNow
 
 def saveItems(datasource, items):
     modelapi.updateDatasources(datasource, items)
+    datareceiver.receive(datasource, items)
 
 def getDatasources():
     datasources = modelapi.getDatasources()
