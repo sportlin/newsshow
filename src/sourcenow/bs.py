@@ -1,128 +1,123 @@
 
+import logging
+
 from commonutil import stringutil, collectionutil
 
 from headline import modelapi
+from . import models
 
-def _getPagesByTags(pages, tags):
+def _getPagesByTags(pages, tags, returnMatched=True):
     result = []
     for page in pages:
-        pageTags = page.get('source').get('tags', [])
-        if not collectionutil.fullContains(pageTags, tags):
-            continue
-        result.append(page)
+        pageTags = page['source']['tags']
+        matched = collectionutil.fullContains(pageTags, tags)
+        if (returnMatched and matched) or (not returnMatched and not matched):
+            result.append(page)
     return result
 
-def getTopicStatus(topicSlug):
-    foundTopic = modelapi.getDisplayTopic(topicSlug)
-    if not foundTopic:
-        return None
-    datasources = modelapi.getDatasources()
+def _getAllPages():
+    datasources = models.getDatasources()
     pages = []
     for datasource in datasources:
         for childPage in datasource['pages']:
             childPage['source'] = datasource['source']
             pages.append(childPage)
-    pages.sort(key=lambda page: (page['source'].get('charts') and page.get('published'))
-                or page['source']['added'], reverse=True)
+    pages.sort(key=lambda page: page['source']['added'], reverse=True)
+    return pages
 
-    resultTopic = foundTopic.get('ui')
+def getTopicStatus(topicSlug):
+    foundTopic = models.getDisplayTopic(topicSlug)
+    if not foundTopic:
+        return None
+    pages = _getAllPages()
     topicTags = foundTopic.get('tags')
     if topicTags:
         topicPages = _getPagesByTags(pages, topicTags)
         if topicPages:
-            resultTopic['pages'] = topicPages
-    return resultTopic
-
-def _prepareDatasource4Show(datasourceIds, datasources):
-    for datasource in datasources:
-        datasourceId = datasourceIds.get(datasource['source'].get('slug'))
-        if datasourceId:
-            datasource['source']['id'] = datasourceId
-        pages = datasource['pages']
+            foundTopic['pages'] = topicPages
+    return foundTopic
 
 def getTopicGroup(topicSlug):
-    foundTopic = modelapi.getDisplayTopic(topicSlug)
+    foundTopic = models.getDisplayTopic(topicSlug)
     if not foundTopic:
         return None
-    datasources = modelapi.getDatasources()
-    groups = modelapi.getTopicGroups(topicSlug)
+    pages = _getAllPages()
+    groups = models.getTopicGroups(topicSlug)
     if not groups:
-        groups = modelapi.getDisplayGroups()
+        groups = models.getDisplayGroups()
+    topicGroups = _getTopicGroups(foundTopic, pages, groups)
+    foundTopic['groups'] = topicGroups
+    return foundTopic
 
-    resultTopic = resultTopic = foundTopic.get('ui')
-    topicGroups = _getTopicGroups(foundTopic, datasources, groups)
-    if topicGroups:
-        # populate datasource id for datasources, as exposed id.
-        datasourceIds = modelapi.getDisplayDatasourceIds(onlyActive=True)
-        for topicGroup in topicGroups:
-            _prepareDatasource4Show(datasourceIds, topicGroup['datasources'])
-        resultTopic['groups'] = topicGroups
-    return resultTopic
-
-def _getUnmatchedDatasources(datasources, items):
-    result = []
-    for datasource in datasources:
-        datasourceTags = datasource.get('source').get('tags', [])
-        matched = False
-        for item in items:
-            tags = item.get('tags')
-            if not tags:
-                continue
-            if collectionutil.fullContains(datasourceTags, tags):
-                matched = True
-                break
-        if not matched:
-            result.append(datasource)
-    if result:
-        result = _sortDatasources(result, orderField='added', reverse=True)
-    return result
-
-def getDatasourcesByTags(datasources, tags):
-    result = []
-    for datasource in datasources:
-        datasourceTags = datasource.get('source').get('tags', [])
-        if not tags:
-            continue
-        if not collectionutil.fullContains(datasourceTags, tags):
-            continue
-        result.append(datasource)
-    return result
-
-def _sortDatasources(datasources, orderField='order', reverse=False):
-    return sorted(datasources, key=lambda source:
-                source.get(orderField) if source.get(orderField)
-                else stringutil.getMaxOrder(), reverse=reverse)
-
-def _getTopicGroups(topic, datasources, groups):
+def _getTopicGroups(topic, pages, groups, maxGroups=-1):
     topicTags = topic.get('tags')
     if not topicTags:
         return None
-    topicDatasources = getDatasourcesByTags(datasources, topicTags)
-    if not topicDatasources:
+    topicPages = _getPagesByTags(pages, topicTags)
+    if not topicPages:
         return None
     topicGroups = []
+    usedTags = set()
+    if maxGroups > 0:
+        groups = groups[:maxGroups - 1]
     for group in groups:
         groupTags = group.get('tags')
         if not groupTags:
             continue
-        groupDatasources = getDatasourcesByTags(topicDatasources, groupTags)
-        if not groupDatasources:
+        groupPages = _getPagesByTags(topicPages, groupTags)
+        if not groupPages:
             continue
+        usedTags.update(groupTags)
         topicGroup = {}
         topicGroup['slug'] = group.get('slug')
         topicGroup['name'] = group.get('name')
-        topicGroup['datasources'] = _sortDatasources(groupDatasources,
-                                        orderField='added', reverse=True)
+        topicGroup['pages'] = groupPages
         topicGroups.append(topicGroup)
-
-    unmatched = _getUnmatchedDatasources(topicDatasources, groups)
+    if usedTags:
+        unmatched = _getPagesByTags(topicPages, list(usedTags),
+                                    returnMatched=False)
+    else:
+        unmatched = pages
     if unmatched:
         unknownGroup = {
             'slug': 'unknown',
             'name': '',
-            'datasources': unmatched,
+            'pages': topicPages,
         }
         topicGroups.append(unknownGroup)
 
     return topicGroups
+
+def getTopics4Home():
+    defaultGroups = models.getDisplayGroups()
+    topics = models.getDisplayTopics()
+    pages = _getAllPages()
+    pages = [page for page in pages if page.get('rank') == 1]
+    resultTopics = []
+    _MAX_GROUPS = 4
+    _GROUP_ITEMS = 6
+    for topic in topics:
+        groups = models.getTopicGroups(topic['slug'])
+        if not groups:
+            groups = defaultGroups
+        topicGroups = _getTopicGroups(topic, pages, groups, maxGroups=_MAX_GROUPS)
+        if topicGroups:
+            for topicGroup in topicGroups:
+                topicGroup['pages'] = topicGroup['pages'][:_GROUP_ITEMS]
+            topic['groups'] = topicGroups
+            resultTopics.append(topic)
+    return resultTopics
+
+def getTopicPicture(slug):
+    foundTopic = models.getDisplayTopic(slug)
+    if not foundTopic:
+        return None
+    pages = _getAllPages()
+    pages = [page for page in pages if 'img' in page]
+    topicTags = foundTopic.get('tags')
+    if topicTags:
+        topicPages = _getPagesByTags(pages, topicTags)
+        if topicPages:
+            foundTopic['pages'] = topicPages
+    return foundTopic
 

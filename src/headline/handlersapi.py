@@ -8,7 +8,7 @@ import jsonpickle
 
 from commonutil import networkutil
 
-from . import hlapi
+from . import datareceiver
 
 class HeadlineAddRequest(webapp2.RequestHandler):
 
@@ -34,7 +34,7 @@ class HeadlineAddResponse(webapp2.RequestHandler):
 
         datasource = data['datasource']
         items = data['items']
-        hlapi.saveItems(datasource, items)
+        datareceiver.receive(datasource, items)
         self.response.out.write('Done.')
 
 

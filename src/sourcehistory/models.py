@@ -1,5 +1,3 @@
-import logging
-
 import configmanager.models
 from configmanager import cmapi
 
@@ -9,6 +7,10 @@ class DatasourceHistory(configmanager.models.ConfigItem):
     pass
 
 cmapi.registerModel(DatasourceHistory)
+
+def receiveData(datasource, items):
+    if not datasource.get('charts'):
+        _saveDatasourceHistory(datasource, items)
 
 class DataReceiver(datareceiver.BasicDataReceiver):
 
@@ -20,15 +22,10 @@ class DataReceiver(datareceiver.BasicDataReceiver):
 
 datareceiver.registerReceiver(DataReceiver('Source History Receiver'))
 
-def getDatasourceHistoryKey(slug):
+def _getDatasourceHistoryKey(slug):
     return slug
 
-def getDatasourceHistory(slug):
-    key = getDatasourceHistoryKey(slug)
-    return cmapi.getItemValue(key, {}, modelname=DatasourceHistory)
-
-def saveDatasourceHistory(datasource, items):
-    logging.info('DatasourceHistory receives: %s.' % (datasource,))
+def _saveDatasourceHistory(datasource, items):
     _MAX_COUNT = 20
     slug = datasource['slug']
     value = getDatasourceHistory(slug)
@@ -40,11 +37,10 @@ def saveDatasourceHistory(datasource, items):
     pages = pages[:_MAX_COUNT]
     value['pages'] = pages
 
-    key = getDatasourceHistoryKey(slug)
+    key = _getDatasourceHistoryKey(slug)
     cmapi.saveItem(key, value, modelname=DatasourceHistory)
 
-def receiveData(datasource, items):
-    if datasource.get('charts'):
-        return
-    saveDatasourceHistory(datasource, items)
+def getDatasourceHistory(slug):
+    key = _getDatasourceHistoryKey(slug)
+    return cmapi.getItemValue(key, {}, modelname=DatasourceHistory)
 
