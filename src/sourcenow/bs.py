@@ -3,7 +3,6 @@ import logging
 
 from commonutil import stringutil, collectionutil
 
-from headline import modelapi
 from . import models
 
 def _getPagesByTags(pages, tags, returnMatched=True):
@@ -22,7 +21,7 @@ def _getAllPages():
         for childPage in datasource['pages']:
             childPage['source'] = datasource['source']
             pages.append(childPage)
-    pages.sort(key=lambda page: page['source']['added'], reverse=True)
+    pages.sort(key=lambda page: page.get('added'), reverse=True)
     return pages
 
 def getTopicStatus(topicSlug):
@@ -88,26 +87,6 @@ def _getTopicGroups(topic, pages, groups, maxGroups=-1):
 
     return topicGroups
 
-def getTopics4Home():
-    defaultGroups = models.getDisplayGroups()
-    topics = models.getDisplayTopics()
-    pages = _getAllPages()
-    pages = [page for page in pages if page.get('rank') == 1]
-    resultTopics = []
-    _MAX_GROUPS = 4
-    _GROUP_ITEMS = 6
-    for topic in topics:
-        groups = models.getTopicGroups(topic['slug'])
-        if not groups:
-            groups = defaultGroups
-        topicGroups = _getTopicGroups(topic, pages, groups, maxGroups=_MAX_GROUPS)
-        if topicGroups:
-            for topicGroup in topicGroups:
-                topicGroup['pages'] = topicGroup['pages'][:_GROUP_ITEMS]
-            topic['groups'] = topicGroups
-            resultTopics.append(topic)
-    return resultTopics
-
 def getTopicPicture(slug):
     foundTopic = models.getDisplayTopic(slug)
     if not foundTopic:
@@ -120,4 +99,32 @@ def getTopicPicture(slug):
         if topicPages:
             foundTopic['pages'] = topicPages
     return foundTopic
+
+def getTopics(groupCount):
+    defaultGroups = models.getDisplayGroups()
+    topics = models.getDisplayTopics()
+    pages = _getAllPages()
+    pages = [page for page in pages if page.get('rank') == 1]
+    resultTopics = []
+    _GROUP_ITEMS = 6
+    for topic in topics:
+        groups = models.getTopicGroups(topic['slug'])
+        if not groups:
+            groups = defaultGroups
+        topicGroups = _getTopicGroups(topic, pages, groups, maxGroups=groupCount)
+        if topicGroups:
+            topic['groups'] = topicGroups
+            resultTopics.append(topic)
+    return resultTopics
+
+def getChartses():
+    orders = models.getChartsesOrder()
+    chartses = models.getChartses()
+    for charts in chartses:
+        order = orders.get(charts['source']['slug'])
+        if not order:
+            order = stringutil.getMaxOrder()
+        charts['source']['order'] = order
+    chartses.sort(key=lambda charts: charts['source']['order'])
+    return chartses
 

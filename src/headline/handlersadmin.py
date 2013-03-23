@@ -4,8 +4,6 @@ from templateutil.handlers import BasicHandler
 
 import globalconfig
 
-from . import hlapi
-
 class MyHandler(BasicHandler):
 
     def prepareBaseValues(self):

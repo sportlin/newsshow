@@ -66,3 +66,14 @@ class ChannelPicture(TopicHandler):
         }
         self.render(templateValues, 'topic-picture.html')
 
+class Chartses(MyHandler):
+
+    def get(self):
+        if not self.prepare():
+            return
+        chartses = bs.getChartses()
+        templateValues = {
+            'chartses': chartses,
+        }
+        self.render(templateValues, 'chartses.html')
+

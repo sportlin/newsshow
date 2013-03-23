@@ -39,6 +39,8 @@ app = webapp2.WSGIApplication([
 ('/admin/clean/', headline.handlersadmin.CleanData),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
+
+webapp2.Route('/hot/', handler=sourcenow.handlers.Chartses, name='hot'),
 webapp2.Route('/channel/group/<slug>/', handler=sourcenow.handlers.ChannelGroup, name='channel.group'),
 webapp2.Route('/channel/picture/<slug>/', handler=sourcenow.handlers.ChannelPicture, name='channel.picture'),
 webapp2.Route('/channel/<slug>/', handler=sourcenow.handlers.ChannelStatus, name='channel.status'),

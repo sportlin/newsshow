@@ -16,7 +16,7 @@ cmapi.registerModel(DisplayItem)
 
 def receiveData(datasource, items):
     if datasource.get('charts'):
-        keyname = 'charts'
+        keyname = 'chartses'
     else:
         keyname = 'datasources'
     _saveDatasource(datasource, items, keyname)
@@ -68,6 +68,9 @@ def getDisplayGroups():
 def getTopicGroups(topicSlug):
     return cmapi.getItemValue('display.groups.' + topicSlug, [], modelname=DisplayItem)
 
+def getChartsesOrder():
+    return cmapi.getItemValue('display.chartses.order', {}, modelname=DisplayItem)
+
 def getDisplayTopic(topicSlug):
     foundTopic = None
     for topic in getDisplayTopics():
@@ -78,4 +81,7 @@ def getDisplayTopic(topicSlug):
 
 def getDatasources():
     return cmapi.getItemValue('datasources', [], modelname=LatestItem)
+
+def getChartses():
+    return cmapi.getItemValue('chartses', [], modelname=LatestItem)
 

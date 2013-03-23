@@ -4,6 +4,9 @@ from . import bs, models
 def getDisplayTopics():
     return models.getDisplayTopics()
 
-def getTopics4Home():
-    return bs.getTopics4Home()
+def getTopics(groupCount):
+    return bs.getTopics(groupCount)
+
+def getChartses():
+    return bs.getChartses()
 

@@ -39,6 +39,7 @@ class MyHandler(BasicHandler):
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
+        self.extraValues['hoturl'] = webapp2.uri_for('hot')
         self.extraValues['menu'] = _getMenu(self.topicShowtype, self.topicSlug)
 
 class TopicHandler(MyHandler):
@@ -57,14 +58,24 @@ class Home(MyHandler):
     def get(self):
         if not self.prepare():
             return
-        topics = snapi.getTopics4Home()
+        maxGroupCount = 4
+        maxGroupChildCount = 6
+        maxChartsChildCount = 6
+        topics = snapi.getTopics(maxGroupCount)
         for topic in topics:
             topicSlug = topic.get('slug')
             topic['url'] = webapp2.uri_for('channel.status', slug=topicSlug)
             for group in topic['groups']:
                 group['url'] =  webapp2.uri_for('channel.group', slug=topicSlug)
+                group['pages'] = group['pages'][:maxGroupChildCount]
+
+        chartses = snapi.getChartses()
+        for charts in chartses:
+            charts['pages'] = charts['pages'][:maxChartsChildCount]
+
         templateValues = {
             'topics': topics,
+            'chartses': chartses,
         }
         self.render(templateValues, 'home.html')
 
