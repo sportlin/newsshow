@@ -1,7 +1,7 @@
 
 import logging
 
-from commonutil import stringutil, collectionutil
+from commonutil import collectionutil
 
 from . import models
 
@@ -118,13 +118,7 @@ def getTopics(groupCount):
     return resultTopics
 
 def getChartses():
-    orders = models.getChartsesOrder()
     chartses = models.getChartses()
-    for charts in chartses:
-        order = orders.get(charts['source']['slug'])
-        if not order:
-            order = stringutil.getMaxOrder()
-        charts['source']['order'] = order
-    chartses.sort(key=lambda charts: charts['source']['order'])
+    chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
     return chartses
 

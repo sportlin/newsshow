@@ -60,6 +60,7 @@ class Home(MyHandler):
             return
         maxGroupCount = 4
         maxGroupChildCount = 6
+        maxChartsCount = 4
         maxChartsChildCount = 6
         topics = snapi.getTopics(maxGroupCount)
         for topic in topics:
@@ -70,6 +71,7 @@ class Home(MyHandler):
                 group['pages'] = group['pages'][:maxGroupChildCount]
 
         chartses = snapi.getChartses()
+        chartses = chartses[:maxChartsCount]
         for charts in chartses:
             charts['pages'] = charts['pages'][:maxChartsChildCount]
 

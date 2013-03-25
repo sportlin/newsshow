@@ -68,9 +68,6 @@ def getDisplayGroups():
 def getTopicGroups(topicSlug):
     return cmapi.getItemValue('display.groups.' + topicSlug, [], modelname=DisplayItem)
 
-def getChartsesOrder():
-    return cmapi.getItemValue('display.chartses.order', {}, modelname=DisplayItem)
-
 def getDisplayTopic(topicSlug):
     foundTopic = None
     for topic in getDisplayTopics():
