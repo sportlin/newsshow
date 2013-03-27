@@ -32,7 +32,7 @@ def _getAllPages():
     pages.sort(key=lambda page: page.get('added'), reverse=True)
     return pages
 
-def getTopicStatus(topicSlug):
+def getTopicInStatus(topicSlug):
     foundTopic = models.getDisplayTopic(topicSlug)
     if not foundTopic:
         return None
@@ -44,19 +44,34 @@ def getTopicStatus(topicSlug):
             foundTopic['pages'] = topicPages
     return foundTopic
 
-def getTopicGroup(topicSlug):
+def _getTopicGroups(groups, slugs):
+    groupConfig = {}
+    for group in groups:
+        groupConfig[group.get('slug')] = group
+    result = []
+    for groupSlug in slugs:
+        group = groupConfig.get(groupSlug)
+        if group:
+            result.append(group)
+    if not result:
+        result = groups
+    return result
+
+def _populateTopicGroups(pages, foundTopic):
+    groups = _getTopicGroups(models.getDisplayGroups(), foundTopic.get(
+                'groups', []))
+    topicGroups = _getTopicPageGroups(foundTopic, pages, groups)
+    foundTopic['groups'] = topicGroups
+
+def getTopicInGroup(topicSlug):
     foundTopic = models.getDisplayTopic(topicSlug)
     if not foundTopic:
         return None
     pages = _getAllPages()
-    groups = models.getTopicGroups(topicSlug)
-    if not groups:
-        groups = models.getDisplayGroups()
-    topicGroups = _getTopicGroups(foundTopic, pages, groups)
-    foundTopic['groups'] = topicGroups
+    _populateTopicGroups(pages, foundTopic)
     return foundTopic
 
-def _getTopicGroups(topic, pages, groups, maxGroups=-1):
+def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
     topicTags = topic.get('tags')
     if not topicTags:
         return None
@@ -115,17 +130,13 @@ def _getTopicGroups(topic, pages, groups, maxGroups=-1):
 
     return topicGroups
 
-def getTopicPicture(slug):
+def getTopicInPicture(slug):
     foundTopic = models.getDisplayTopic(slug)
     if not foundTopic:
         return None
     pages = _getAllPages()
     pages = [page for page in pages if 'img' in page]
-    topicTags = foundTopic.get('tags')
-    if topicTags:
-        topicPages = _getPagesByTags(pages, topicTags)
-        if topicPages:
-            foundTopic['pages'] = topicPages
+    _populateTopicGroups(pages, foundTopic)
     return foundTopic
 
 def getTopics(groupCount):
@@ -136,10 +147,8 @@ def getTopics(groupCount):
     resultTopics = []
     _GROUP_ITEMS = 6
     for topic in topics:
-        groups = models.getTopicGroups(topic['slug'])
-        if not groups:
-            groups = defaultGroups
-        topicGroups = _getTopicGroups(topic, pages, groups, maxGroups=groupCount)
+        groups = _getTopicGroups(defaultGroups, topic.get('groups', []))
+        topicGroups = _getTopicPageGroups(topic, pages, groups, maxGroups=groupCount)
         if topicGroups:
             topic['groups'] = topicGroups
             resultTopics.append(topic)

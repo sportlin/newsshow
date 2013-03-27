@@ -3,14 +3,11 @@ import webapp2
 from templateutil.handlers import BasicHandler
 
 import globalconfig
+import globalutil
 
 from headline.handlers import MyHandler, TopicHandler
 from sourcenow import bs
 
-def _populateSourceUrl(pages):
-    for page in pages:
-        page['source']['url'] = webapp2.uri_for('datasource.history',
-                                    slug=page['source']['slug'])
 
 class ChannelStatus(TopicHandler):
 
@@ -19,11 +16,11 @@ class ChannelStatus(TopicHandler):
         self.topicSlug = slug
         if not self.prepare():
             return
-        topic = bs.getTopicStatus(slug)
+        topic = bs.getTopicInStatus(slug)
         if not topic:
             self.error(404)
             return
-        _populateSourceUrl(topic['pages'])
+        globalutil.populateSourceUrl(topic['pages'])
         templateValues = {
             'topic': topic,
         }
@@ -37,12 +34,12 @@ class ChannelGroup(TopicHandler):
         self.topicSlug = slug
         if not self.prepare():
             return
-        topic = bs.getTopicGroup(slug)
+        topic = bs.getTopicInGroup(slug)
         if not topic:
             self.error(404)
             return
         for group in topic['groups']:
-            _populateSourceUrl(group['pages'])
+            globalutil.populateSourceUrl(group['pages'])
         templateValues = {
             'topic': topic,
         }
@@ -56,7 +53,7 @@ class ChannelPicture(TopicHandler):
         self.topicSlug = slug
         if not self.prepare():
             return
-        topic = bs.getTopicPicture(slug)
+        topic = bs.getTopicInPicture(slug)
         if not topic:
             self.error(404)
             return

@@ -3,6 +3,7 @@ import webapp2
 from templateutil.handlers import BasicHandler
 
 import globalconfig
+import globalutil
 
 from sourcenow import snapi
 
@@ -20,8 +21,10 @@ def _getMenu(topicShowtype, selectedSlug):
             topicHandlerName = 'channel.group'
         elif topicShowtype == 'picture':
             topicHandlerName = 'channel.picture'
-        else:
+        elif topicShowtype == 'status':
             topicHandlerName = 'channel.status'
+        else:
+            topicHandlerName = 'channel.group'
         url = webapp2.uri_for(topicHandlerName, slug=topicSlug)
         topicMenus.append({
             'name': topicName,
@@ -69,6 +72,7 @@ class Home(MyHandler):
             for group in topic['groups']:
                 group['url'] =  webapp2.uri_for('channel.group', slug=topicSlug)
                 group['pages'] = group['pages'][:maxGroupChildCount]
+                globalutil.populateSourceUrl(group['pages'])
 
         chartses = snapi.getChartses()
         chartses = chartses[:maxChartsCount]
