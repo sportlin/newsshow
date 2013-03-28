@@ -15,11 +15,6 @@ import sourcehistory.handlers
 
 import globalconfig
 
-class MainPage(webapp2.RequestHandler):
-    def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        self.response.out.write('Hello, webapp World!')
-
 config = {}
 config['webapp2_extras.jinja2'] = {
     'template_path': os.path.join(os.path.dirname(__file__), 'html', 'templates'),
@@ -34,13 +29,13 @@ config['webapp2_extras.jinja2'] = {
 
 app = webapp2.WSGIApplication([
 ('/', headline.handlers.Home),
-('/hello/', MainPage),
 ('/configitem/', configmanager.handlers.MainPage),
 ('/admin/clean/', headline.handlersadmin.CleanData),
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 
 webapp2.Route('/hot/', handler=sourcenow.handlers.Chartses, name='hot'),
+webapp2.Route('/charts/<slug:.+>', handler=sourcenow.handlers.Charts, name='charts'),
 webapp2.Route('/channel/group/<slug>/', handler=sourcenow.handlers.ChannelGroup, name='channel.group'),
 webapp2.Route('/channel/picture/<slug>/', handler=sourcenow.handlers.ChannelPicture, name='channel.picture'),
 webapp2.Route('/channel/<slug>/', handler=sourcenow.handlers.ChannelStatus, name='channel.status'),

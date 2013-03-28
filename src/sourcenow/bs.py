@@ -74,10 +74,10 @@ def getTopicInGroup(topicSlug):
 def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
     topicTags = topic.get('tags')
     if not topicTags:
-        return None
+        return []
     topicPages = _getPagesByTags(pages, topicTags)
     if not topicPages:
-        return None
+        return []
     topicGroups = []
     usedTags = set()
     validCount = 0
@@ -158,4 +158,11 @@ def getChartses():
     chartses = models.getChartses()
     chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
     return chartses
+
+def getCharts(slug):
+    chartses = models.getChartses()
+    for charts in chartses:
+        if charts['source']['slug'] == slug:
+            return charts
+    return None
 

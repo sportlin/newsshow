@@ -69,8 +69,24 @@ class Chartses(MyHandler):
         if not self.prepare():
             return
         chartses = bs.getChartses()
+        for charts in chartses:
+            charts['url'] = webapp2.uri_for('charts', slug=charts['source']['slug'])
         templateValues = {
             'chartses': chartses,
         }
         self.render(templateValues, 'chartses.html')
+
+class Charts(MyHandler):
+
+    def get(self, slug):
+        if not self.prepare():
+            return
+        charts = bs.getCharts(slug)
+        if not charts:
+            self.error(404)
+            return
+        templateValues = {
+            'charts': charts,
+        }
+        self.render(templateValues, 'charts.html')
 
