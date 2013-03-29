@@ -167,8 +167,8 @@ def getChartses():
 def getLatestPages():
     chartsPages = models.getPages(keyname='chartses')
     sitePages = models.getPages(keyname='datasources')
-    pages = []
-    pages.extend(chartsPages)
-    pages.extend(sitePages)
-    return pages
+    return {
+        'charts': chartsPages,
+        'site': sitePages,
+    }
 

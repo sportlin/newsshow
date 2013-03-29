@@ -96,9 +96,12 @@ class Latest(MyHandler):
     def get(self):
         if not self.prepare():
             return
-        pages = bs.getLatestPages()
-        pages.sort(key=lambda page: page.get('added'), reverse=True)
-        globalutil.populateSourceUrl(pages)
+        result = bs.getLatestPages()
+        globalutil.populateSourceUrl(result['site'])
+        pages = []
+        pages.extend(result['site'])
+        pages.extend(result['charts'])
+        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
         templateValues = {
             'pages': pages,
         }

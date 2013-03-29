@@ -72,11 +72,10 @@ class Home(MyHandler):
 
         maxPageCount = 10
         pages = homedata['pages']
-        pages['charts'].sort(key=lambda page: page.get('added'), reverse=True)
+        pages['charts'].sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
         pages['site'].sort(key=lambda page: page.get('added'), reverse=True)
         pages['charts'] = pages['charts'][:maxPageCount]
         pages['site'] = pages['site'][:maxPageCount]
-        globalutil.populateSourceUrl(pages['charts'])
         globalutil.populateSourceUrl(pages['site'])
         groups = []
         groups.append({
