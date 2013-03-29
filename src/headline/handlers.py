@@ -42,7 +42,6 @@ class MyHandler(BasicHandler):
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        self.extraValues['hoturl'] = webapp2.uri_for('hot')
         self.extraValues['menu'] = _getMenu(self.topicShowtype, self.topicSlug)
 
 class TopicHandler(MyHandler):
@@ -61,26 +60,40 @@ class Home(MyHandler):
     def get(self):
         if not self.prepare():
             return
-        maxGroupCount = 4
-        maxGroupChildCount = 6
+
         maxChartsCount = 4
         maxChartsChildCount = 6
-        topics = snapi.getTopics(maxGroupCount)
-        for topic in topics:
-            topicSlug = topic.get('slug')
-            topic['url'] = webapp2.uri_for('channel.status', slug=topicSlug)
-            for group in topic['groups']:
-                group['url'] =  webapp2.uri_for('channel.group', slug=topicSlug)
-                group['pages'] = group['pages'][:maxGroupChildCount]
-                globalutil.populateSourceUrl(group['pages'])
-
-        chartses = snapi.getChartses()
+        homedata = snapi.getData4Home()
+        chartses = homedata['chartses']
+        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
         chartses = chartses[:maxChartsCount]
         for charts in chartses:
             charts['pages'] = charts['pages'][:maxChartsChildCount]
 
+        maxPageCount = 10
+        pages = homedata['pages']
+        pages['charts'].sort(key=lambda page: page.get('added'), reverse=True)
+        pages['site'].sort(key=lambda page: page.get('added'), reverse=True)
+        pages['charts'] = pages['charts'][:maxPageCount]
+        pages['site'] = pages['site'][:maxPageCount]
+        globalutil.populateSourceUrl(pages['charts'])
+        globalutil.populateSourceUrl(pages['site'])
+        groups = []
+        groups.append({
+            'name': self.i18n.get('headline'),
+            'pages': pages['site'],
+            })
+        groups.append({
+            'name': self.i18n.get('hot'),
+            'pages': pages['charts'],
+            })
+
+        hoturl = webapp2.uri_for('hot')
+        latesturl = webapp2.uri_for('latest')
         templateValues = {
-            'topics': topics,
+            'hoturl': hoturl,
+            'latesturl': latesturl,
+            'groups': groups,
             'chartses': chartses,
         }
         self.render(templateValues, 'home.html')

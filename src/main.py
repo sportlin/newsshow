@@ -34,7 +34,8 @@ app = webapp2.WSGIApplication([
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 
-webapp2.Route('/hot/', handler=sourcenow.handlers.Chartses, name='hot'),
+webapp2.Route('/hot/', handler=sourcenow.handlers.Hot, name='hot'),
+webapp2.Route('/latest/', handler=sourcenow.handlers.Latest, name='latest'),
 webapp2.Route('/charts/<slug:.+>', handler=sourcenow.handlers.Charts, name='charts'),
 webapp2.Route('/channel/group/<slug>/', handler=sourcenow.handlers.ChannelGroup, name='channel.group'),
 webapp2.Route('/channel/picture/<slug>/', handler=sourcenow.handlers.ChannelPicture, name='channel.picture'),

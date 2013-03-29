@@ -154,15 +154,21 @@ def getTopics(groupCount):
             resultTopics.append(topic)
     return resultTopics
 
-def getChartses():
-    chartses = models.getChartses()
-    chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
-    return chartses
-
 def getCharts(slug):
-    chartses = models.getChartses()
+    chartses = models.getDatasources('chartses')
     for charts in chartses:
         if charts['source']['slug'] == slug:
             return charts
     return None
+
+def getChartses():
+    return models.getDatasources('chartses')
+
+def getLatestPages():
+    chartsPages = models.getPages(keyname='chartses')
+    sitePages = models.getPages(keyname='datasources')
+    pages = []
+    pages.extend(chartsPages)
+    pages.extend(sitePages)
+    return pages
 

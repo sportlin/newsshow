@@ -73,9 +73,18 @@ def getDisplayTopic(topicSlug):
             break
     return foundTopic
 
-def getDatasources():
-    return cmapi.getItemValue('datasources', [], modelname=LatestItem)
+def getDatasources(keyname=None):
+    if not keyname:
+        keyname = 'datasources'
+    return cmapi.getItemValue(keyname, [], modelname=LatestItem)
 
-def getChartses():
-    return cmapi.getItemValue('chartses', [], modelname=LatestItem)
+def getPages(datasources=None, keyname=None):
+    if keyname:
+        datasources = cmapi.getItemValue(keyname, [], modelname=LatestItem)
+    pages = []
+    for datasource in datasources:
+        for childPage in datasource['pages']:
+            childPage['source'] = datasource['source']
+            pages.append(childPage)
+    return pages
 

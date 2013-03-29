@@ -63,18 +63,19 @@ class ChannelPicture(TopicHandler):
         }
         self.render(templateValues, 'topic-picture.html')
 
-class Chartses(MyHandler):
+class Hot(MyHandler):
 
     def get(self):
         if not self.prepare():
             return
         chartses = bs.getChartses()
+        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
         for charts in chartses:
             charts['url'] = webapp2.uri_for('charts', slug=charts['source']['slug'])
         templateValues = {
             'chartses': chartses,
         }
-        self.render(templateValues, 'chartses.html')
+        self.render(templateValues, 'hot.html')
 
 class Charts(MyHandler):
 
@@ -89,4 +90,17 @@ class Charts(MyHandler):
             'charts': charts,
         }
         self.render(templateValues, 'charts.html')
+
+class Latest(MyHandler):
+
+    def get(self):
+        if not self.prepare():
+            return
+        pages = bs.getLatestPages()
+        pages.sort(key=lambda page: page.get('added'), reverse=True)
+        globalutil.populateSourceUrl(pages)
+        templateValues = {
+            'pages': pages,
+        }
+        self.render(templateValues, 'latest.html')
 
