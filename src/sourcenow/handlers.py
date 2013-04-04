@@ -32,8 +32,10 @@ class ChannelGroup(TopicHandler):
         if not topic:
             self.error(404)
             return
+
         for group in topic['groups']:
             globalutil.populateSourceUrl(group['pages'])
+
         templateValues = {
             'topic': topic,
         }
@@ -48,6 +50,9 @@ class ChannelPicture(TopicHandler):
         if not topic:
             self.error(404)
             return
+
+        for group in topic['groups']:
+            globalutil.populateSourceUrl(group['pages'])
 
         templateValues = {
             'topic': topic,

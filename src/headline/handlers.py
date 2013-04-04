@@ -28,7 +28,7 @@ def _getMenu(topicShowtype, selectedSlug):
         elif topicShowtype == 'status':
             topicHandlerName = 'channel.status'
         else:
-            topicHandlerName = 'channel.group'
+            topicHandlerName = 'channel.picture'
         url = webapp2.uri_for(topicHandlerName, channel=topicSlug)
         topicMenus.append({
             'name': topicName,
@@ -98,22 +98,13 @@ class Home(MyHandler):
         pages['charts'] = pages['charts'][:maxPageCount]
         pages['site'] = pages['site'][:maxPageCount]
         globalutil.populateSourceUrl(pages['site'])
-        groups = []
-        groups.append({
-            'name': self.i18n.get('latestHeadline'),
-            'pages': pages['site'],
-            })
-        groups.append({
-            'name': self.i18n.get('latestHot'),
-            'pages': pages['charts'],
-            })
 
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')
         templateValues = {
             'hoturl': hoturl,
             'latesturl': latesturl,
-            'groups': groups,
+            'pages': pages,
             'chartses': chartses,
         }
         self.render(templateValues, 'home.html')
@@ -131,12 +122,17 @@ class Search(MyHandler):
             pages = [ page for page in pages if 'img' in page ]
             pages.sort(key=lambda page: page.get('added'), reverse=True)
             globalutil.populateSourceUrl(pages)
+
             gpages = gnews.search(keyword, True)
             gpages = [ page for page in gpages if 'img' in page ]
+
+        gnewsUrl = gnews.getSearchUrl(keyword)
+
         templateValues = {
             'keyword': keyword,
             'pages': pages,
             'gpages': gpages,
+            'gnewsurl': gnewsUrl,
         }
         self.render(templateValues, 'search.html')
 
