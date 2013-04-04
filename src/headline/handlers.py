@@ -1,6 +1,10 @@
+import logging
+
 import webapp2
 
 from templateutil.handlers import BasicHandler
+from robotkeyword import rkapi
+from searcher import gnews
 
 import globalconfig
 import globalutil
@@ -25,7 +29,7 @@ def _getMenu(topicShowtype, selectedSlug):
             topicHandlerName = 'channel.status'
         else:
             topicHandlerName = 'channel.group'
-        url = webapp2.uri_for(topicHandlerName, slug=topicSlug)
+        url = webapp2.uri_for(topicHandlerName, channel=topicSlug)
         topicMenus.append({
             'name': topicName,
             'url': url,
@@ -34,44 +38,61 @@ def _getMenu(topicShowtype, selectedSlug):
     return topicMenus
 
 class MyHandler(BasicHandler):
-    topicSlug = None
-    topicShowtype = None
+    channelSlug = None
+    showtype = None
+
+    def doRedirection(self):
+        if self.request.path.startswith('/search/'):
+            return False
+        referer = self.request.referer
+        if not referer:
+            return False
+        keyword = rkapi.getRefererKeyword(referer)
+        if not keyword:
+            return False
+        reserveds = self.site.get('reserved.keywords',[])
+        for reserved in reserveds:
+            if reserved in keyword:
+                return False
+        keyword = keyword.encode('utf8')
+        url = webapp2.uri_for('search', keyword=keyword)
+        self.redirect(url, permanent=True)
+        return True
 
     def prepareBaseValues(self):
         self.site = globalconfig.getSiteConfig()
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        self.extraValues['menu'] = _getMenu(self.topicShowtype, self.topicSlug)
+        self.channelSlug = self.request.route_kwargs.get('channel')
+        self.extraValues['menu'] = _getMenu(self.showtype, self.channelSlug)
 
 class TopicHandler(MyHandler):
 
     def prepareValues(self):
         super(TopicHandler, self).prepareValues()
-        slug = self.topicSlug
+        slug = self.channelSlug
         self.extraValues['topicUrls'] = {
-                'status': webapp2.uri_for('channel.status', slug=slug),
-                'group': webapp2.uri_for('channel.group', slug=slug),
-                'picture': webapp2.uri_for('channel.picture', slug=slug),
+                'status': webapp2.uri_for('channel.status', channel=slug),
+                'group': webapp2.uri_for('channel.group', channel=slug),
+                'picture': webapp2.uri_for('channel.picture', channel=slug),
             }
 
 class Home(MyHandler):
 
     def get(self):
-        if not self.prepare():
-            return
-
         maxChartsCount = 4
         maxChartsChildCount = 6
         homedata = snapi.getData4Home()
         chartses = homedata['chartses']
         chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
-        chartses = chartses[:maxChartsCount]
+        # chartses = chartses[:maxChartsCount]
         for charts in chartses:
             charts['pages'] = charts['pages'][:maxChartsChildCount]
 
         maxPageCount = 10
         pages = homedata['pages']
+        pages['site'] = [ page for page in pages['site'] if page.get('rank') == 1 ]
         pages['charts'].sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
         pages['site'].sort(key=lambda page: page.get('added'), reverse=True)
         pages['charts'] = pages['charts'][:maxPageCount]
@@ -79,11 +100,11 @@ class Home(MyHandler):
         globalutil.populateSourceUrl(pages['site'])
         groups = []
         groups.append({
-            'name': self.i18n.get('headline'),
+            'name': self.i18n.get('latestHeadline'),
             'pages': pages['site'],
             })
         groups.append({
-            'name': self.i18n.get('hot'),
+            'name': self.i18n.get('latestHot'),
             'pages': pages['charts'],
             })
 
@@ -96,4 +117,26 @@ class Home(MyHandler):
             'chartses': chartses,
         }
         self.render(templateValues, 'home.html')
+
+
+
+class Search(MyHandler):
+
+    def get(self, keyword):
+        pages = []
+        gpages = []
+        if keyword:
+            keyword = keyword.decode('utf8')
+            pages = snapi.search(keyword)
+            pages = [ page for page in pages if 'img' in page ]
+            pages.sort(key=lambda page: page.get('added'), reverse=True)
+            globalutil.populateSourceUrl(pages)
+            gpages = gnews.search(keyword, True)
+            gpages = [ page for page in gpages if 'img' in page ]
+        templateValues = {
+            'keyword': keyword,
+            'pages': pages,
+            'gpages': gpages,
+        }
+        self.render(templateValues, 'search.html')
 

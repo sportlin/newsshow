@@ -5,10 +5,8 @@ from sourcehistory import bs
 
 class DatasourceHistory(MyHandler):
 
-    def get(self, slug):
-        if not self.prepare():
-            return
-        datasource = bs.getDatasourceHistory(slug)
+    def get(self, source):
+        datasource = bs.getDatasourceHistory(source)
         if not datasource:
             self.error(404)
             return

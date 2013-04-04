@@ -10,13 +10,10 @@ from sourcenow import bs
 
 
 class ChannelStatus(TopicHandler):
+    showtype = 'status'
 
-    def get(self, slug):
-        self.topicShowtype = 'status'
-        self.topicSlug = slug
-        if not self.prepare():
-            return
-        topic = bs.getTopicInStatus(slug)
+    def get(self, channel):
+        topic = bs.getTopicInStatus(channel)
         if not topic:
             self.error(404)
             return
@@ -28,13 +25,10 @@ class ChannelStatus(TopicHandler):
 
 
 class ChannelGroup(TopicHandler):
+    showtype = 'group'
 
-    def get(self, slug):
-        self.topicShowtype = 'group'
-        self.topicSlug = slug
-        if not self.prepare():
-            return
-        topic = bs.getTopicInGroup(slug)
+    def get(self, channel):
+        topic = bs.getTopicInGroup(channel)
         if not topic:
             self.error(404)
             return
@@ -47,13 +41,10 @@ class ChannelGroup(TopicHandler):
 
 
 class ChannelPicture(TopicHandler):
+    showtype = 'picture'
 
-    def get(self, slug):
-        self.topicShowtype = 'picture'
-        self.topicSlug = slug
-        if not self.prepare():
-            return
-        topic = bs.getTopicInPicture(slug)
+    def get(self, channel):
+        topic = bs.getTopicInPicture(channel)
         if not topic:
             self.error(404)
             return
@@ -66,12 +57,10 @@ class ChannelPicture(TopicHandler):
 class Hot(MyHandler):
 
     def get(self):
-        if not self.prepare():
-            return
         chartses = bs.getChartses()
         chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
         for charts in chartses:
-            charts['url'] = webapp2.uri_for('charts', slug=charts['source']['slug'])
+            charts['url'] = webapp2.uri_for('charts', charts=charts['source']['slug'])
         templateValues = {
             'chartses': chartses,
         }
@@ -79,10 +68,8 @@ class Hot(MyHandler):
 
 class Charts(MyHandler):
 
-    def get(self, slug):
-        if not self.prepare():
-            return
-        charts = bs.getCharts(slug)
+    def get(self, charts):
+        charts = bs.getCharts(charts)
         if not charts:
             self.error(404)
             return
@@ -94,8 +81,6 @@ class Charts(MyHandler):
 class Latest(MyHandler):
 
     def get(self):
-        if not self.prepare():
-            return
         result = bs.getLatestPages()
         globalutil.populateSourceUrl(result['site'])
         pages = []
