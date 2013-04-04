@@ -2,6 +2,8 @@ import logging
 
 import webapp2
 
+from smallseg import smallseg
+
 from templateutil.handlers import BasicHandler
 from robotkeyword import rkapi
 from searcher import gnews
@@ -10,6 +12,8 @@ import globalconfig
 import globalutil
 
 from sourcenow import snapi
+
+seg = smallseg.SEG()
 
 def _getMenu(topicShowtype, selectedSlug):
     topics = snapi.getDisplayTopics()
@@ -116,9 +120,21 @@ class Search(MyHandler):
     def get(self, keyword):
         pages = []
         gpages = []
+        words = []
         if keyword:
+            words = seg.cut(keyword)
             keyword = keyword.decode('utf8')
-            pages = snapi.search(keyword)
+            pages = []
+            titles = set()
+            for word in words:
+                if len(word) < 2:
+                    continue
+                wpages = snapi.search(word)
+                for wpage in wpages:
+                    if wpage.get('title') in titles:
+                        continue
+                    titles.add(wpage.get('title'))
+                    pages.append(wpage)
             pages = [ page for page in pages if 'img' in page ]
             pages.sort(key=lambda page: page.get('added'), reverse=True)
             globalutil.populateSourceUrl(pages)
@@ -133,6 +149,7 @@ class Search(MyHandler):
             'pages': pages,
             'gpages': gpages,
             'gnewsurl': gnewsUrl,
+            'words': words,
         }
         self.render(templateValues, 'search.html')
 
