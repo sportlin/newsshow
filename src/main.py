@@ -13,6 +13,9 @@ import headline.handlers
 import sourcenow.handlers
 import sourcehistory.handlers
 
+import hotword.handlersapi
+import hotword.handlers
+
 import globalconfig
 
 config = {}
@@ -42,6 +45,10 @@ webapp2.Route('/channel/group/<channel>/', handler=sourcenow.handlers.ChannelGro
 webapp2.Route('/channel/picture/<channel>/', handler=sourcenow.handlers.ChannelPicture, name='channel.picture'),
 webapp2.Route('/channel/<channel>/', handler=sourcenow.handlers.ChannelStatus, name='channel.status'),
 webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHistory, name='datasource.history'),
+
+('/words/start/', hotword.handlersapi.Start),
+('/words/run/', hotword.handlersapi.Run),
+('/words/show/', hotword.handlers.Show),
 ],
 debug=True, config=config)
 

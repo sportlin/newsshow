@@ -4,3 +4,9 @@ queue:
   bucket_size: 1
   max_concurrent_requests: 1
 
+- name: words
+  rate: 1/s
+  bucket_size: 1
+  max_concurrent_requests: 1
+  target: words
+

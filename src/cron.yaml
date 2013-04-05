@@ -1,0 +1,5 @@
+cron:
+- description: Send requests to calculate hot words.
+  url: /words/start/
+  schedule: every 1 hours synchronized
+

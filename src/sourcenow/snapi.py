@@ -25,3 +25,6 @@ def search(keyword):
             result.append(page)
     return result
 
+def getSitePages():
+    return models.getPages(keyname='datasources')
+

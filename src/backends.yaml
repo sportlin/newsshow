@@ -1,0 +1,4 @@
+backends:
+- name: words
+  options: dynamic
+

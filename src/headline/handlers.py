@@ -3,12 +3,12 @@ import logging
 import webapp2
 
 from templateutil.handlers import BasicHandler
-from robotkeyword import rkapi
 from searcher import gnews
+from robotkeyword import rkapi
 
+from hotword import hwapi
 import globalconfig
 import globalutil
-
 from sourcenow import snapi
 
 def _getMenu(topicShowtype, selectedSlug):
@@ -106,6 +106,7 @@ class Home(MyHandler):
             'latesturl': latesturl,
             'pages': pages,
             'chartses': chartses,
+            'words': hwapi.getJsonWords(),
         }
         self.render(templateValues, 'home.html')
 
@@ -133,12 +134,11 @@ class Search(MyHandler):
                         continue
                     titles.add(wpage.get('title'))
                     pages.append(wpage)
-            pages = [ page for page in pages if 'img' in page ]
             pages.sort(key=lambda page: page.get('added'), reverse=True)
             globalutil.populateSourceUrl(pages)
 
-            gpages = gnews.search(keyword, True)
-            gpages = [ page for page in gpages if 'img' in page ]
+            gpages = gnews.search(keyword)
+            gpages = gpages[:2]
 
         gnewsUrl = gnews.getSearchUrl(keyword)
 
