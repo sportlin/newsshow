@@ -2,8 +2,6 @@ import logging
 
 import webapp2
 
-from smallseg import smallseg
-
 from templateutil.handlers import BasicHandler
 from robotkeyword import rkapi
 from searcher import gnews
@@ -12,8 +10,6 @@ import globalconfig
 import globalutil
 
 from sourcenow import snapi
-
-seg = smallseg.SEG()
 
 def _getMenu(topicShowtype, selectedSlug):
     topics = snapi.getDisplayTopics()
@@ -122,7 +118,9 @@ class Search(MyHandler):
         gpages = []
         words = []
         if keyword:
-            words = seg.cut(keyword)
+            import jieba # May fail to load jieba
+            words = list(jieba.cut(keyword, cut_all=False))
+            # words = list(jieba.cut_for_search(keyword))
             keyword = keyword.decode('utf8')
             pages = []
             titles = set()
