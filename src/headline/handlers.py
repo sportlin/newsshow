@@ -103,6 +103,7 @@ class Search(MyHandler):
         gnewssize = 2
         if keyword:
             import jieba # May fail to load jieba
+            jieba.initialize(usingSmall=True)
             words = list(jieba.cut(keyword, cut_all=False))
             # words = list(jieba.cut_for_search(keyword))
             keyword = keyword.decode('utf8')

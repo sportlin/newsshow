@@ -10,6 +10,7 @@ from . import models
 
 def _getTopWords(content):
     import jieba # May fail to load jieba
+    jieba.initialize(usingSmall=False)
     pwords = jieba.cut(content, cut_all=False)
     words = []
     for word in pwords:
