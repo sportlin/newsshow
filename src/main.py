@@ -41,9 +41,7 @@ webapp2.Route('/search/<keyword:.*>', handler=headline.handlers.Search, name='se
 webapp2.Route('/hot/', handler=sourcenow.handlers.Hot, name='hot'),
 webapp2.Route('/latest/', handler=sourcenow.handlers.Latest, name='latest'),
 webapp2.Route('/charts/<charts:.+>', handler=sourcenow.handlers.Charts, name='charts'),
-webapp2.Route('/channel/group/<channel>/', handler=sourcenow.handlers.ChannelGroup, name='channel.group'),
-webapp2.Route('/channel/picture/<channel>/', handler=sourcenow.handlers.ChannelPicture, name='channel.picture'),
-webapp2.Route('/channel/<channel>/', handler=sourcenow.handlers.ChannelStatus, name='channel.status'),
+webapp2.Route('/channel/<channel>/', handler=sourcenow.handlers.Channel, name='channel'),
 webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHistory, name='datasource.history'),
 
 ('/words/start/', hotword.handlersapi.Start),

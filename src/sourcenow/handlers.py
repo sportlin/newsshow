@@ -5,59 +5,24 @@ from templateutil.handlers import BasicHandler
 import globalconfig
 import globalutil
 
-from headline.handlers import MyHandler, TopicHandler
+from headline.handlers import MyHandler
 from sourcenow import bs
 
-
-class ChannelStatus(TopicHandler):
-    showtype = 'status'
+class Channel(MyHandler):
 
     def get(self, channel):
-        topic = bs.getTopicInStatus(channel)
-        if not topic:
-            self.error(404)
-            return
-        globalutil.populateSourceUrl(topic['pages'])
-        templateValues = {
-            'topic': topic,
-        }
-        self.render(templateValues, 'topic-status.html')
-
-
-class ChannelGroup(TopicHandler):
-    showtype = 'group'
-
-    def get(self, channel):
-        topic = bs.getTopicInGroup(channel)
-        if not topic:
+        channel = bs.getChannel(channel)
+        if not channel:
             self.error(404)
             return
 
-        for group in topic['groups']:
+        for group in channel['groups']:
             globalutil.populateSourceUrl(group['pages'])
 
         templateValues = {
-            'topic': topic,
+            'channel': channel,
         }
-        self.render(templateValues, 'topic-group.html')
-
-
-class ChannelPicture(TopicHandler):
-    showtype = 'picture'
-
-    def get(self, channel):
-        topic = bs.getTopicInPicture(channel)
-        if not topic:
-            self.error(404)
-            return
-
-        for group in topic['groups']:
-            globalutil.populateSourceUrl(group['pages'])
-
-        templateValues = {
-            'topic': topic,
-        }
-        self.render(templateValues, 'topic-picture.html')
+        self.render(templateValues, 'channel.html')
 
 class Hot(MyHandler):
 
@@ -78,7 +43,9 @@ class Charts(MyHandler):
         if not charts:
             self.error(404)
             return
+        hoturl = webapp2.uri_for('hot')
         templateValues = {
+            'hoturl': hoturl,
             'charts': charts,
         }
         self.render(templateValues, 'charts.html')
@@ -86,12 +53,14 @@ class Charts(MyHandler):
 class Latest(MyHandler):
 
     def get(self):
+        _LATEST_COUNT = 50
         result = bs.getLatestPages()
         globalutil.populateSourceUrl(result['site'])
         pages = []
         pages.extend(result['site'])
         pages.extend(result['charts'])
         pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
+        pages = pages[:_LATEST_COUNT]
         templateValues = {
             'pages': pages,
         }

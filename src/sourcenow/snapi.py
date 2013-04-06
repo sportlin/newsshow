@@ -1,4 +1,4 @@
-
+from commonutil import stringutil
 from . import bs, models
 
 def getDisplayTopics():
@@ -21,7 +21,9 @@ def search(keyword):
     chartsPages = models.getPages(keyname='chartses')
     result = []
     for page in sitePages + chartsPages:
-        if keyword in page.get('title', ''):
+        if stringutil.contains(page.get('keyword', ''), keyword):
+            result.append(page)
+        elif stringutil.contains(page.get('title', ''), keyword):
             result.append(page)
     return result
 

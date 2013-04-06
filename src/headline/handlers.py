@@ -11,7 +11,7 @@ import globalconfig
 import globalutil
 from sourcenow import snapi
 
-def _getMenu(topicShowtype, selectedSlug):
+def _getMenu(selectedSlug):
     topics = snapi.getDisplayTopics()
     topicMenus = []
     for topic in topics:
@@ -21,15 +21,7 @@ def _getMenu(topicShowtype, selectedSlug):
             continue
         if not topicName:
             continue
-        if topicShowtype == 'group':
-            topicHandlerName = 'channel.group'
-        elif topicShowtype == 'picture':
-            topicHandlerName = 'channel.picture'
-        elif topicShowtype == 'status':
-            topicHandlerName = 'channel.status'
-        else:
-            topicHandlerName = 'channel.picture'
-        url = webapp2.uri_for(topicHandlerName, channel=topicSlug)
+        url = webapp2.uri_for('channel', channel=topicSlug)
         topicMenus.append({
             'name': topicName,
             'url': url,
@@ -65,18 +57,8 @@ class MyHandler(BasicHandler):
 
     def prepareValues(self):
         self.channelSlug = self.request.route_kwargs.get('channel')
-        self.extraValues['menu'] = _getMenu(self.showtype, self.channelSlug)
+        self.extraValues['menu'] = _getMenu(self.channelSlug)
 
-class TopicHandler(MyHandler):
-
-    def prepareValues(self):
-        super(TopicHandler, self).prepareValues()
-        slug = self.channelSlug
-        self.extraValues['topicUrls'] = {
-                'status': webapp2.uri_for('channel.status', channel=slug),
-                'group': webapp2.uri_for('channel.group', channel=slug),
-                'picture': webapp2.uri_for('channel.picture', channel=slug),
-            }
 
 class Home(MyHandler):
 
@@ -118,6 +100,7 @@ class Search(MyHandler):
         pages = []
         gpages = []
         words = []
+        gnewssize = 2
         if keyword:
             import jieba # May fail to load jieba
             words = list(jieba.cut(keyword, cut_all=False))
@@ -137,8 +120,10 @@ class Search(MyHandler):
             pages.sort(key=lambda page: page.get('added'), reverse=True)
             globalutil.populateSourceUrl(pages)
 
-            gpages = gnews.search(keyword)
-            gpages = gpages[:2]
+            gpages = gnews.search(keyword, large=True)
+            gpages.sort(key=lambda page: page.get('published'), reverse=True)
+            gpages.sort(key=lambda page: bool(page.get('img')), reverse=True)
+            gpages = gpages[:gnewssize]
 
         gnewsUrl = gnews.getSearchUrl(keyword)
 
