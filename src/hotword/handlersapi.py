@@ -15,6 +15,6 @@ class Run(webapp2.RequestHandler):
 
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'
-        words = bs.calculateTopWords()
+        _, words = bs.calculateTopWords()
         bs.saveWords(words)
 

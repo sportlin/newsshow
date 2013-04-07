@@ -1,5 +1,5 @@
 # coding=utf-8
-
+import copy
 import datetime
 import logging
 
@@ -35,7 +35,7 @@ def _getTopWords(content):
     result.sort(key=lambda item: item.get('count'), reverse=True)
     return result
 
-def _getWordPages(pages, words):
+def _getWordTitles(pages, words):
     result = {}
     for word in words:
         wordTitles = set()
@@ -49,33 +49,60 @@ def _getWordPages(pages, words):
         result[word['name']] = wordTitles
     return result
 
-def _mergeWord(wordTitles, parentWord, childWord):
+def _mergeWord(wordTitles, parentWord, childWord, watchList=None):
     parentTitles = wordTitles[parentWord['name']]
     childTitles = wordTitles[childWord['name']]
     d = childTitles.difference(parentTitles)
-    similar = len(d) * 1.0 / len(childTitles) < 0.6
-    if similar:
+    similar = 1 - len(d) * 1.0 / len(childTitles)
+    # if childWord['name'] == u'70':
+    #    logging.info('%s-%s:%s-%s-%s' % (parentWord['count'],childWord['count'],len(parentTitles), len(childTitles), len(d)))
+    if similar >= 0.65:
         parentTitles.update(childTitles)
         parentWord['page'] = len(parentTitles)
         del wordTitles[childWord['name']]
-    return similar
+        return True
+    if similar >= 0.25 and watchList is not None:
+        watchList.append(childWord)
+    return False
 
-def _mergeWords(wordPages, words):
+def _mergeWatchList(wordTitles, parentWord, watchList):
+    index = 0
+    size = len(watchList)
+    merged = []
+    while index < size:
+        item = watchList[index]
+        if _mergeWord(wordTitles, parentWord, item):
+            merged.append(item)
+            del watchList[index]
+            size -= 1
+            index = 0
+        else:
+            index += 1
+    return merged
+
+def _mergeWords(wordTitles, words):
     index = 0
     size = len(words)
     while index < size:
         word = words[index]
         index2 = index + 1
         children = []
+        watchList = []
         while index2 < size:
             word2 = words[index2]
-            if _mergeWord(wordPages, word, word2):
+            if _mergeWord(wordTitles, word, word2, watchList):
                 children.append(word2)
                 del words[index2]
                 size -= 1
+                mergeds = _mergeWatchList(wordTitles, word, watchList)
+                for item in mergeds:
+                    children.append(item)
+                    words.remove(item)
+                    size -= 1
             else:
                 index2 += 1
         if children:
+            children.sort(key=lambda item: item['page'], reverse=True)
             word['children'] = children
         index += 1
 
@@ -88,9 +115,10 @@ def calculateTopWords():
             continue
         titles.append(title)
     words = _getTopWords('\n'.join(titles))
-    wordPages = _getWordPages(pages, words)
-    _mergeWords(wordPages, words)
-    return words
+    wordTitles = _getWordTitles(pages, words)
+    words2 = copy.copy(words)
+    _mergeWords(wordTitles, words2)
+    return words, words2
 
 def saveWords(items):
     nnow = datetime.datetime.utcnow()
