@@ -3,8 +3,11 @@ import copy
 import datetime
 import logging
 
+from pytz.gae import pytz
+
 from commonutil import dateutil
 
+import globalconfig
 from sourcenow import snapi
 from . import models
 
@@ -131,4 +134,19 @@ def saveWords(items):
 def getWords():
     value = models.getWords()
     return value.get('words', [])
+
+def isBackendsTime():
+    site = globalconfig.getSiteConfig()
+    timezonename = site.get('timezone')
+    if not timezonename:
+        return True
+    backendsConfig = site.get('backends')
+    if not backendsConfig:
+        return True
+    hours = backendsConfig.get('hours')
+    if not hours:
+        return True
+    nnow = datetime.datetime.now(tz=pytz.utc)
+    tzdate = nnow.astimezone(pytz.timezone(timezonename))
+    return tzdate.hour in hours
 
