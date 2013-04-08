@@ -1,5 +1,7 @@
 import json
 
+import webapp2
+
 from . import bs
 
 def _getTitle(word):
@@ -15,17 +17,27 @@ def _getKeywords(word):
     return ' '.join(keywords)
 
 def getJsonWords():
-    words = bs.getWords()
-    cloudWords = []
-    for word in words:
-        cloudWords.append({
+    data = bs.getWords('sources')
+    allWords = []
+    for word in data.get('all', {}).get('words', []):
+        allWords.append({
             'text': _getTitle(word),
             'weight': word['page'],
             'link': {
-                    'href': '/search/' + _getKeywords(word),
+                    'href': webapp2.uri_for('search', keyword=_getKeywords(word)),
                     'target': '_blank',
                     'title': word['page'],
                 },
             })
-    return json.dumps(cloudWords)
+    latestWords = []
+    for word in data.get('latest', {}).get('words', []):
+        title = _getKeywords(word)
+        latestWords.append({
+            'title': title,
+            'url': webapp2.uri_for('search', keyword=title),
+        })
+    return json.dumps({
+            'all': allWords,
+            'latest': latestWords,
+        })
 

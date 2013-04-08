@@ -3,15 +3,20 @@ import copy
 import datetime
 import logging
 
-from pytz.gae import pytz
 
 from commonutil import dateutil
 
-import globalconfig
-from sourcenow import snapi
 from . import models
 
-def _getTopWords(content):
+def getTopWords(pages):
+    titles = []
+    for page in pages:
+        title = page.get('title')
+        if not title:
+            continue
+        titles.append(title)
+    content = '\n'.join(titles)
+
     import jieba # May fail to load jieba
     jieba.initialize(usingSmall=False)
     pwords = jieba.cut(content, cut_all=False)
@@ -52,56 +57,33 @@ def _getWordTitles(pages, words):
         result[word['name']] = wordTitles
     return result
 
-def _mergeWord(wordTitles, parentWord, childWord, watchList=None):
-    parentTitles = wordTitles[parentWord['name']]
-    childTitles = wordTitles[childWord['name']]
-    d = childTitles.difference(parentTitles)
-    similar = 1 - len(d) * 1.0 / len(childTitles)
-    # if childWord['name'] == u'70':
-    #    logging.info('%s-%s:%s-%s-%s' % (parentWord['count'],childWord['count'],len(parentTitles), len(childTitles), len(d)))
-    if similar >= 0.65:
-        parentTitles.update(childTitles)
-        parentWord['page'] = len(parentTitles)
-        del wordTitles[childWord['name']]
-        return True
-    if similar >= 0.25 and watchList is not None:
-        watchList.append(childWord)
-    return False
+def _getSimilarValue(parentTitles, childTitles):
+    i = childTitles.intersection(parentTitles)
+    similar = len(i) * 1.0 / len(childTitles)
+    return similar
 
-def _mergeWatchList(wordTitles, parentWord, watchList):
-    index = 0
-    size = len(watchList)
-    merged = []
-    while index < size:
-        item = watchList[index]
-        if _mergeWord(wordTitles, parentWord, item):
-            merged.append(item)
-            del watchList[index]
-            size -= 1
-            index = 0
-        else:
-            index += 1
-    return merged
-
-def _mergeWords(wordTitles, words):
+def mergeWords(similarRate, pages, words):
+    wordTitles = _getWordTitles(pages, words)
     index = 0
     size = len(words)
     while index < size:
         word = words[index]
         index2 = index + 1
         children = []
-        watchList = []
+        parentTitles = wordTitles[word['name']]
         while index2 < size:
             word2 = words[index2]
-            if _mergeWord(wordTitles, word, word2, watchList):
+            childTitles = wordTitles[word2['name']]
+            similarValue = _getSimilarValue(parentTitles, childTitles)
+            if similarValue >= similarRate:
+                parentTitles.update(childTitles)
+                word['page'] = len(parentTitles)
+                del wordTitles[word2['name']]
                 children.append(word2)
                 del words[index2]
                 size -= 1
-                mergeds = _mergeWatchList(wordTitles, word, watchList)
-                for item in mergeds:
-                    children.append(item)
-                    words.remove(item)
-                    size -= 1
+                # the previous may be mergable after parent titles grow.
+                index2 = index + 1
             else:
                 index2 += 1
         if children:
@@ -109,44 +91,22 @@ def _mergeWords(wordTitles, words):
             word['children'] = children
         index += 1
 
-def calculateTopWords():
-    pages = snapi.getSitePages()
-    titles = []
-    for page in pages:
-        title = page.get('title')
-        if not title:
-            continue
-        titles.append(title)
-    words = _getTopWords('\n'.join(titles))
-    wordTitles = _getWordTitles(pages, words)
-    words2 = copy.copy(words)
-    _mergeWords(wordTitles, words2)
-    return words, words2
-
-def saveWords(items):
+def saveWords(similarRate, keyname, allHours, allWords, latestHours, latestWords):
     nnow = datetime.datetime.utcnow()
     data = {
+            'similar': similarRate,
             'updated': dateutil.getDateAs14(nnow),
-            'words': items,
+            'all': {
+                'hours': allHours,
+                'words': allWords,
+            },
+            'latest': {
+                'hours': latestHours,
+                'words': latestWords,
+            },
         }
-    models.saveWords(data)
+    models.saveWords(keyname, data)
 
-def getWords():
-    value = models.getWords()
-    return value.get('words', [])
-
-def isBackendsTime():
-    site = globalconfig.getSiteConfig()
-    timezonename = site.get('timezone')
-    if not timezonename:
-        return True
-    backendsConfig = site.get('backends')
-    if not backendsConfig:
-        return True
-    hours = backendsConfig.get('hours')
-    if not hours:
-        return True
-    nnow = datetime.datetime.now(tz=pytz.utc)
-    tzdate = nnow.astimezone(pytz.timezone(timezonename))
-    return tzdate.hour in hours
+def getWords(keyname):
+    return models.getWords(keyname)
 

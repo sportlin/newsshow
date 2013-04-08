@@ -7,9 +7,9 @@ class HotWord(configmanager.models.ConfigItem):
 
 cmapi.registerModel(HotWord)
 
-def saveWords(value):
-    cmapi.saveItem('now', value, modelname=HotWord)
+def saveWords(keyname, value):
+    cmapi.saveItem(keyname, value, modelname=HotWord)
 
-def getWords():
-    return cmapi.getItemValue('now', {}, modelname=HotWord)
+def getWords(keyname):
+    return cmapi.getItemValue(keyname, {}, modelname=HotWord)
 

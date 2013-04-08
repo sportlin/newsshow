@@ -31,3 +31,13 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
+def getWordsConfig():
+    result = getSiteConfig().get('words', {})
+    if 'similar' not in result:
+        result['similar'] = 0.65
+    if 'hours.all' not in result:
+        result['hours.all'] = 24
+    if 'hours.latest' not in result:
+        result['hours.latest'] = 4
+    return result
+
