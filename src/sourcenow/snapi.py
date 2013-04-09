@@ -16,14 +16,25 @@ def getData4Home():
         }
     }
 
-def search(keyword):
+def getAllPages():
     sitePages = models.getPages(keyname='datasources')
     chartsPages = models.getPages(keyname='chartses')
+    return sitePages + chartsPages
+
+def search(pages, keywords):
     result = []
-    for page in sitePages + chartsPages:
-        if stringutil.contains(page.get('keyword', ''), keyword):
-            result.append(page)
-        elif stringutil.contains(page.get('title', ''), keyword):
+    ksize = len(keywords)
+    for page in pages:
+        grade = 0
+        for index, keyword in enumerate(keywords):
+            # the top keyword is more important than the bottom one.
+            indexBonus = (ksize - index) * 0.1
+            if stringutil.contains(page.get('keyword', ''), keyword):
+                grade += len(keyword) + indexBonus
+            elif stringutil.contains(page.get('title', ''), keyword):
+                grade += len(keyword) + indexBonus
+        if grade > 0:
+            page['grade'] = grade
             result.append(page)
     return result
 

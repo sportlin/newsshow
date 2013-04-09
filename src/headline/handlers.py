@@ -93,7 +93,6 @@ class Home(MyHandler):
         self.render(templateValues, 'home.html')
 
 
-
 class Search(MyHandler):
 
     def get(self, keyword):
@@ -105,23 +104,21 @@ class Search(MyHandler):
             import jieba # May fail to load jieba
             jieba.initialize(usingSmall=True)
             words = list(jieba.cut(keyword, cut_all=False))
+            words = [ word for word in words if len(word) > 1 ]
             # words = list(jieba.cut_for_search(keyword))
             keyword = keyword.decode('utf8')
-            pages = []
-            titles = set()
-            for word in words:
-                if len(word) < 2:
-                    continue
-                wpages = snapi.search(word)
-                for wpage in wpages:
-                    if wpage.get('title') in titles:
-                        continue
-                    titles.add(wpage.get('title'))
-                    pages.append(wpage)
+            pages = snapi.getAllPages()
+            pages = snapi.search(pages, words)
             pages.sort(key=lambda page: page.get('added'), reverse=True)
+            pages.sort(key=lambda page: page.get('grade'), reverse=True)
             globalutil.populateSourceUrl(pages)
 
             gpages = gnews.search(keyword, large=True)
+            if not gpages:
+                for word in words:
+                    gpages = gnews.search(word, large=True)
+                    if gpages:
+                        break
             gpages.sort(key=lambda page: page.get('published'), reverse=True)
             gpages.sort(key=lambda page: bool(page.get('img')), reverse=True)
             gpages = gpages[:gnewssize]
