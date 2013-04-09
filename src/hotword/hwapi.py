@@ -23,18 +23,13 @@ def getJsonWords():
         allWords.append({
             'text': _getTitle(word),
             'weight': word['page'],
-            'link': {
-                    'href': webapp2.uri_for('search', keyword=_getKeywords(word)),
-                    'target': '_blank',
-                    'title': word['page'],
-                },
+            'keyword': _getKeywords(word),
             })
     latestWords = []
     for word in data.get('latest', {}).get('words', []):
         title = _getKeywords(word)
         latestWords.append({
             'title': title,
-            'url': webapp2.uri_for('search', keyword=title),
         })
     return json.dumps({
             'all': allWords,
