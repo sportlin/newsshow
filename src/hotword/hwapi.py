@@ -22,7 +22,7 @@ def getJsonWords():
     for word in data.get('all', {}).get('words', []):
         allWords.append({
             'text': _getTitle(word),
-            'weight': word['page'],
+            'weight': word['pages'],
             'keyword': _getKeywords(word),
             })
     latestWords = []
@@ -30,6 +30,7 @@ def getJsonWords():
         title = _getKeywords(word)
         latestWords.append({
             'title': title,
+            'page': word['page'],
         })
     return json.dumps({
             'all': allWords,

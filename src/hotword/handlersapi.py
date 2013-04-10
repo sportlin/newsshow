@@ -13,7 +13,7 @@ from . import bs
 class Start(webapp2.RequestHandler):
 
     def get(self):
-        if not globalutil.isBackendsTime():
+        if not self.request.get('force') and not globalutil.isBackendsTime():
             logging.info('Now is not backends time.')
             return
         taskqueue.add(queue_name='words', url='/words/run/')
@@ -23,6 +23,14 @@ def _populateWords(stopWords, similarRate, hours, pages):
     pages = [ page for page in pages if page['added'] >= start ]
     words = bs.getTopWords(pages, stopWords)
     bs.mergeWords(similarRate, pages, words)
+    for word in words:
+        keywords = []
+        keywords.append(word['name'])
+        for childWord in word.get('children', []):
+            keywords.append(childWord['name'])
+        matched = snapi.search(pages, keywords)
+        wordPage = max(matched, key=lambda page: page['grade'])
+        word['page'] = wordPage
     return words
 
 def _saveWords(stopWords, similarRate, keyname, allHours, latestHours, pages):

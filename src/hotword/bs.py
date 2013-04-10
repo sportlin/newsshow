@@ -12,7 +12,6 @@ from . import models
 def _isStopWord(stopWordPatterns, word):
     stopped = False
     for pattern in stopWordPatterns:
-        logging.info('pattern: %s.' % (pattern,))
         if re.match(pattern, word, re.IGNORECASE|re.DOTALL):
             stopped = True
             break
@@ -63,7 +62,7 @@ def _getWordTitles(pages, words):
                 continue
             if word['name'] in title:
                 wordTitles.add(title)
-        word['page'] = len(wordTitles)
+        word['pages'] = len(wordTitles)
         result[word['name']] = wordTitles
     return result
 
@@ -87,7 +86,7 @@ def mergeWords(similarRate, pages, words):
             similarValue = _getSimilarValue(parentTitles, childTitles)
             if similarValue >= similarRate:
                 parentTitles.update(childTitles)
-                word['page'] = len(parentTitles)
+                word['pages'] = len(parentTitles)
                 del wordTitles[word2['name']]
                 children.append(word2)
                 del words[index2]
@@ -97,7 +96,7 @@ def mergeWords(similarRate, pages, words):
             else:
                 index2 += 1
         if children:
-            children.sort(key=lambda item: item['page'], reverse=True)
+            children.sort(key=lambda item: item['pages'], reverse=True)
             word['children'] = children
         index += 1
 
