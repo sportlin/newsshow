@@ -18,26 +18,27 @@ class Start(webapp2.RequestHandler):
             return
         taskqueue.add(queue_name='words', url='/words/run/')
 
-def _populateWords(similarRate, hours, pages):
+def _populateWords(stopWords, similarRate, hours, pages):
     start = dateutil.getHoursAs14(hours)
     pages = [ page for page in pages if page['added'] >= start ]
-    words = bs.getTopWords(pages)
+    words = bs.getTopWords(pages, stopWords)
     bs.mergeWords(similarRate, pages, words)
     return words
 
-def _saveWords(similarRate, keyname, allHours, latestHours, pages):
-    allWords = _populateWords(similarRate, allHours, pages)
-    latestWords = _populateWords(similarRate, latestHours, pages)
+def _saveWords(stopWords, similarRate, keyname, allHours, latestHours, pages):
+    allWords = _populateWords(stopWords, similarRate, allHours, pages)
+    latestWords = _populateWords(stopWords, similarRate, latestHours, pages)
     bs.saveWords(similarRate, keyname, allHours, allWords, latestHours, latestWords)
 
 class Run(webapp2.RequestHandler):
 
     def post(self):
         wordsConfig = globalconfig.getWordsConfig()
+        stopWords = wordsConfig['stop']
         similarRate = wordsConfig['similar']
         pages = snapi.getSitePages()
 
         allHours = wordsConfig['hours.all']
         latestHours = wordsConfig['hours.latest']
-        _saveWords(similarRate, 'sources', allHours, latestHours, pages)
+        _saveWords(stopWords, similarRate, 'sources', allHours, latestHours, pages)
 

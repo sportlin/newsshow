@@ -15,7 +15,7 @@ class Show(MyHandler):
             start = dateutil.getHoursAs14(wordsConfig['hours.all'])
             pages = snapi.getSitePages()
             pages = [ page for page in pages if page['added'] >= start ]
-            words = bs.getTopWords(pages)
+            words = bs.getTopWords(pages, [])
         templateValues = {
             'words': hwapi.getJsonWords(),
             'originWords': words,

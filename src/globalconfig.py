@@ -32,7 +32,9 @@ def getTopicHomeLatest():
     return hours
 
 def getWordsConfig():
-    result = getSiteConfig().get('words', {})
+    result = cmapi.getItemValue('words', {})
+    if 'stop' not in result:
+        result['stop'] = []
     if 'similar' not in result:
         result['similar'] = 0.65
     if 'hours.all' not in result:

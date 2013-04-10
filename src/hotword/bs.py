@@ -2,13 +2,23 @@
 import copy
 import datetime
 import logging
-
+import re
 
 from commonutil import dateutil
 
 from . import models
 
-def getTopWords(pages):
+
+def _isStopWord(stopWordPatterns, word):
+    stopped = False
+    for pattern in stopWordPatterns:
+        logging.info('pattern: %s.' % (pattern,))
+        if re.match(pattern, word, re.IGNORECASE|re.DOTALL):
+            stopped = True
+            break
+    return stopped
+
+def getTopWords(pages, stopWordPatterns):
     titles = []
     for page in pages:
         title = page.get('title')
@@ -22,7 +32,7 @@ def getTopWords(pages):
     pwords = jieba.cut(content, cut_all=False)
     words = []
     for word in pwords:
-        if len(word) > 1:
+        if not _isStopWord(stopWordPatterns, word):
             words.append(word)
     words.sort()
 
