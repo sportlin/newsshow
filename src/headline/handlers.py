@@ -63,6 +63,7 @@ class MyHandler(BasicHandler):
 class Home(MyHandler):
 
     def get(self):
+        sentenceSeparators = self.site.get('sentence.separator', [])
         maxChartsCount = 4
         maxChartsChildCount = 6
         homedata = snapi.getData4Home()
@@ -71,6 +72,7 @@ class Home(MyHandler):
         # chartses = chartses[:maxChartsCount]
         for charts in chartses:
             charts['pages'] = charts['pages'][:maxChartsChildCount]
+            globalutil.compressContent(sentenceSeparators, charts['pages'])
 
         maxPageCount = 10
         pages = homedata['pages']
@@ -80,15 +82,18 @@ class Home(MyHandler):
         pages['charts'] = pages['charts'][:maxPageCount]
         pages['site'] = pages['site'][:maxPageCount]
         globalutil.populateSourceUrl(pages['site'])
+        globalutil.compressContent(sentenceSeparators, pages['site'])
+        globalutil.compressContent(sentenceSeparators, pages['charts'])
 
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')
+        words = hwapi.getJsonWords(sentenceSeparators)
         templateValues = {
             'hoturl': hoturl,
             'latesturl': latesturl,
             'pages': pages,
             'chartses': chartses,
-            'words': hwapi.getJsonWords(),
+            'words': words,
         }
         self.render(templateValues, 'home.html')
 

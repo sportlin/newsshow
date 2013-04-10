@@ -2,6 +2,8 @@ import json
 
 import webapp2
 
+from commonutil import stringutil
+
 from . import bs
 
 def _getTitle(word):
@@ -16,7 +18,7 @@ def _getKeywords(word):
         keywords.append(item['name'])
     return ' '.join(keywords)
 
-def getJsonWords():
+def getJsonWords(sentenceSeparators):
     data = bs.getWords('sources')
     allWords = []
     for word in data.get('all', {}).get('words', []):
@@ -27,6 +29,9 @@ def getJsonWords():
             })
     latestWords = []
     for word in data.get('latest', {}).get('words', []):
+        if word['page'].get('content'):
+            word['page']['content'] = stringutil.getFirstSentence(
+                               sentenceSeparators, word['page']['content'])
         title = _getKeywords(word)
         latestWords.append({
             'title': title,

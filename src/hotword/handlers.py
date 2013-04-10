@@ -9,6 +9,7 @@ class Show(MyHandler):
 
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
+        sentenceSeparators = self.site.get('sentence.separator', [])
         words = []
         if self.request.get('test'):
             wordsConfig = globalconfig.getWordsConfig()
@@ -17,7 +18,7 @@ class Show(MyHandler):
             pages = [ page for page in pages if page['added'] >= start ]
             words = bs.getTopWords(pages, [])
         templateValues = {
-            'words': hwapi.getJsonWords(),
+            'words': hwapi.getJsonWords(sentenceSeparators),
             'originWords': words,
         }
         self.render(templateValues, 'words.html')

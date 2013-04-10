@@ -4,6 +4,7 @@ import webapp2
 
 from pytz.gae import pytz
 
+from commonutil import stringutil
 import globalconfig
 
 def populateSourceUrl(pages):
@@ -12,6 +13,12 @@ def populateSourceUrl(pages):
             continue
         page['source']['url'] = webapp2.uri_for('datasource.history',
                                     source=page['source']['slug'])
+
+def compressContent(sentenceSeparators, pages):
+    for page in pages:
+        if not page.get('content'):
+            continue
+        page['content'] = stringutil.getFirstSentence(sentenceSeparators, page['content'])
 def isBackendsTime():
     site = globalconfig.getSiteConfig()
     timezonename = site.get('timezone')
