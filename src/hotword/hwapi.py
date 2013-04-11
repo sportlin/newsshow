@@ -33,12 +33,10 @@ def getJsonWords(sentenceSeparators):
             word['page']['content'] = stringutil.getFirstSentence(
                                sentenceSeparators, word['page']['content'])
         title = _getKeywords(word)
-        latestWords.append({
-            'title': title,
-            'page': word['page'],
-        })
-    return json.dumps({
+        word['page']['keyword'] = title
+        latestWords.append(word['page'])
+    return {
             'all': allWords,
             'latest': latestWords,
-        })
+        }
 

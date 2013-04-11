@@ -31,6 +31,9 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
+def getBackendsConfig():
+    return cmapi.getItemValue('backends', {})
+
 def getWordsConfig():
     result = cmapi.getItemValue('words', {})
     if 'stop' not in result:

@@ -19,16 +19,16 @@ def compressContent(sentenceSeparators, pages):
         if not page.get('content'):
             continue
         page['content'] = stringutil.getFirstSentence(sentenceSeparators, page['content'])
+
 def isBackendsTime():
-    site = globalconfig.getSiteConfig()
-    timezonename = site.get('timezone')
-    if not timezonename:
-        return True
-    backendsConfig = site.get('backends')
+    backendsConfig = globalconfig.getBackendsConfig()
     if not backendsConfig:
         return True
     hours = backendsConfig.get('hours')
     if not hours:
+        return True
+    timezonename = backendsConfig.get('timezone')
+    if not timezonename:
         return True
     nnow = datetime.datetime.now(tz=pytz.utc)
     tzdate = nnow.astimezone(pytz.timezone(timezonename))

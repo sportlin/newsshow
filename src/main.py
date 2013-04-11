@@ -24,6 +24,7 @@ config['webapp2_extras.jinja2'] = {
     'filters': {
         'utc14duration': templateutil.filters.utc14duration,
         'd14format': templateutil.filters.d14format,
+        'tojson': templateutil.filters.tojson,
     },
     'environment_args': {
         'extensions': ['jinja2.ext.loopcontrols', 'jinja2.ext.with_'],
