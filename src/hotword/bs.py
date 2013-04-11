@@ -31,6 +31,10 @@ def getTopWords(pages, stopWordPatterns):
     pwords = jieba.cut(content, cut_all=False)
     words = []
     for word in pwords:
+        # sometime "\r\n\n" encountered
+        word = word.strip()
+        if not word:
+            continue
         if not _isStopWord(stopWordPatterns, word):
             words.append(word)
     words.sort()
@@ -83,6 +87,10 @@ def mergeWords(similarRate, pages, words):
         while index2 < size:
             word2 = words[index2]
             childTitles = wordTitles[word2['name']]
+            if len(childTitles) == 0:
+                logging.warn('Empty child: %s' % (word2))
+                index2 += 1
+                continue
             similarValue = _getSimilarValue(parentTitles, childTitles)
             if similarValue >= similarRate:
                 parentTitles.update(childTitles)

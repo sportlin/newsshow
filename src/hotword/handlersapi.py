@@ -38,15 +38,21 @@ def _saveWords(stopWords, similarRate, keyname, allHours, latestHours, pages):
     latestWords = _populateWords(stopWords, similarRate, latestHours, pages)
     bs.saveWords(similarRate, keyname, allHours, allWords, latestHours, latestWords)
 
+def _calculateWords():
+    wordsConfig = globalconfig.getWordsConfig()
+    stopWords = wordsConfig['stop']
+    similarRate = wordsConfig['similar']
+    pages = snapi.getSitePages()
+
+    allHours = wordsConfig['hours.all']
+    latestHours = wordsConfig['hours.latest']
+    _saveWords(stopWords, similarRate, 'sources', allHours, latestHours, pages)
+
 class Run(webapp2.RequestHandler):
 
     def post(self):
-        wordsConfig = globalconfig.getWordsConfig()
-        stopWords = wordsConfig['stop']
-        similarRate = wordsConfig['similar']
-        pages = snapi.getSitePages()
-
-        allHours = wordsConfig['hours.all']
-        latestHours = wordsConfig['hours.latest']
-        _saveWords(stopWords, similarRate, 'sources', allHours, latestHours, pages)
+        try:
+            _calculateWords()
+        except Exception:
+            logging.exception('Failed to execute _calculateWords.')
 
