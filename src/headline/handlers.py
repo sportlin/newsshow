@@ -64,36 +64,17 @@ class Home(MyHandler):
 
     def get(self):
         sentenceSeparators = self.site.get('sentence.separator', [])
-        maxChartsCount = 4
-        maxChartsChildCount = 6
-        homedata = snapi.getData4Home()
-        chartses = homedata['chartses']
-        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
-        # chartses = chartses[:maxChartsCount]
-        for charts in chartses:
-            charts['pages'] = charts['pages'][:maxChartsChildCount]
-            globalutil.compressContent(sentenceSeparators, charts['pages'])
-
-        maxPageCount = 10
-        pages = homedata['pages']
-        pages['site'] = [ page for page in pages['site'] if page.get('rank') == 1 ]
-        pages['charts'].sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
-        pages['site'].sort(key=lambda page: page.get('added'), reverse=True)
-        pages['charts'] = pages['charts'][:maxPageCount]
-        pages['site'] = pages['site'][:maxPageCount]
-        globalutil.populateSourceUrl(pages['site'])
-        globalutil.compressContent(sentenceSeparators, pages['site'])
-        globalutil.compressContent(sentenceSeparators, pages['charts'])
 
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')
-        words = hwapi.getJsonWords(sentenceSeparators)
+
+        siteWords = hwapi.getJsonWords(sentenceSeparators, 'sites')
+        chartsWords = hwapi.getJsonWords(sentenceSeparators, 'chartses')
         templateValues = {
             'hoturl': hoturl,
             'latesturl': latesturl,
-            'pages': pages,
-            'chartses': chartses,
-            'words': words,
+            'siteWords': siteWords,
+            'chartsWords': chartsWords,
         }
         self.render(templateValues, 'home.html')
 

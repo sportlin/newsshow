@@ -42,11 +42,14 @@ def _calculateWords():
     wordsConfig = globalconfig.getWordsConfig()
     stopWords = wordsConfig['stop']
     similarRate = wordsConfig['similar']
-    pages = snapi.getSitePages()
-
     allHours = wordsConfig['hours.all']
     latestHours = wordsConfig['hours.latest']
-    _saveWords(stopWords, similarRate, 'sources', allHours, latestHours, pages)
+
+    pages = snapi.getSitePages()
+    _saveWords(stopWords, similarRate, 'sites', allHours, latestHours, pages)
+
+    pages = snapi.getChartsPages()
+    _saveWords(stopWords, similarRate, 'chartses', allHours, latestHours, pages)
 
 class Run(webapp2.RequestHandler):
 

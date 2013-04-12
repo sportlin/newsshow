@@ -18,7 +18,7 @@ handlers:
   static_files: html/site/sitemap.xml
   upload: html/site/sitemap.xml
 
-- url: /media/6
+- url: /media/7
   static_dir: html/media
 
 - url: /.*

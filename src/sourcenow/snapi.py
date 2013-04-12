@@ -41,3 +41,6 @@ def search(pages, keywords):
 def getSitePages():
     return models.getPages(keyname='datasources')
 
+def getChartsPages():
+    return models.getPages(keyname='chartses')
+

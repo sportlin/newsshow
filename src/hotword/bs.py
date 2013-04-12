@@ -20,10 +20,12 @@ def _isStopWord(stopWordPatterns, word):
 def getTopWords(pages, stopWordPatterns):
     titles = []
     for page in pages:
+        keyword = page.get('keyword')
+        if keyword:
+            titles.append(keyword)
         title = page.get('title')
-        if not title:
-            continue
-        titles.append(title)
+        if title:
+            titles.append(title)
     content = '\n'.join(titles)
 
     import jieba # May fail to load jieba

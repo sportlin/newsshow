@@ -18,23 +18,42 @@ def _getKeywords(word):
         keywords.append(item['name'])
     return ' '.join(keywords)
 
-def getJsonWords(sentenceSeparators):
-    data = bs.getWords('sources')
-    allWords = []
-    for word in data.get('all', {}).get('words', []):
-        allWords.append({
-            'text': _getTitle(word),
-            'weight': word['pages'],
-            'keyword': _getKeywords(word),
-            })
+def getJsonWords(sentenceSeparators, wordsName):
+    data = bs.getWords(wordsName)
+
+    urls = set()
     latestWords = []
     for word in data.get('latest', {}).get('words', []):
+        if word['page'].get('url') in urls:
+            continue
+        urls.add(word['page'].get('url'))
         if word['page'].get('content'):
             word['page']['content'] = stringutil.getFirstSentence(
                                sentenceSeparators, word['page']['content'])
         title = _getKeywords(word)
         word['page']['keyword'] = title
         latestWords.append(word['page'])
+
+    allWords = []
+    _ALL_EVENTS = 10
+    for index, word in enumerate(data.get('all', {}).get('words', [])):
+        allWords.append({
+            'text': _getTitle(word),
+            'weight': word['pages'],
+            'keyword': _getKeywords(word),
+            })
+        if index < _ALL_EVENTS:
+            if word['page'].get('url') in urls:
+                continue
+            urls.add(word['page'].get('url'))
+            if word['page'].get('content'):
+                word['page']['content'] = stringutil.getFirstSentence(
+                                   sentenceSeparators, word['page']['content'])
+            title = _getKeywords(word)
+            word['page']['keyword'] = title
+            latestWords.append(word['page'])
+            index += 1
+
     return {
             'all': allWords,
             'latest': latestWords,
