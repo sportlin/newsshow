@@ -39,7 +39,9 @@ def getWordsConfig():
     if 'stop' not in result:
         result['stop'] = []
     if 'similar' not in result:
-        result['similar'] = 0.65
+        result['similar'] = {
+                '0': 6
+            }
     if 'hours.all' not in result:
         result['hours.all'] = 24
     if 'hours.latest' not in result:

@@ -55,7 +55,8 @@ def getTopWords(pages, stopWordPatterns):
     if lastCount >= _MIN_WORD_COUNT:
         result.append({'name': lastWord, 'count': lastCount})
 
-    result.sort(key=lambda item: item.get('count'), reverse=True)
+    result.sort(key=lambda item: len(item['name']), reverse=True)
+    result.sort(key=lambda item: item['count'], reverse=True)
     return result
 
 def _getWordTitles(pages, words):
@@ -72,12 +73,22 @@ def _getWordTitles(pages, words):
         result[word['name']] = wordTitles
     return result
 
-def _getSimilarValue(parentTitles, childTitles):
-    i = childTitles.intersection(parentTitles)
-    similar = len(i) * 1.0 / len(childTitles)
-    return similar
+def _isSimilarWords(similarCriterion, parentTitles, childTitles):
+    total = len(childTitles)
+    common = len(childTitles.intersection(parentTitles))
+    if common == total:
+        return True
+    if not similarCriterion:
+        return False
+    threshhold = similarCriterion.get('0')
+    if common >= threshhold:
+        return True
+    threshhold = similarCriterion.get(str(total))
+    if not threshhold:
+        return False
+    return common >= threshhold
 
-def _mergeWords(similarRate, pages, words):
+def _mergeWords(similarCriterion, pages, words):
     wordTitles = _getWordTitles(pages, words)
     index = 0
     size = len(words)
@@ -93,8 +104,7 @@ def _mergeWords(similarRate, pages, words):
                 logging.warn('Empty child: %s' % (word2))
                 index2 += 1
                 continue
-            similarValue = _getSimilarValue(parentTitles, childTitles)
-            if similarValue >= similarRate:
+            if _isSimilarWords(similarCriterion, parentTitles, childTitles):
                 parentTitles.update(childTitles)
                 word['pages'] = len(parentTitles)
                 del wordTitles[word2['name']]
@@ -110,10 +120,9 @@ def _mergeWords(similarRate, pages, words):
             word['children'] = children
         index += 1
 
-def _saveWords(similarRate, keyname, allHours, allWords):
+def _saveWords(keyname, allHours, allWords):
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     data = {
-            'similar': similarRate,
             'updated': nnow,
             'hours': allHours,
             'words': allWords,
@@ -123,11 +132,11 @@ def _saveWords(similarRate, keyname, allHours, allWords):
 def getWords(keyname):
     return models.getWords(keyname)
 
-def _populateWords(stopWords, similarRate, hours, pages):
+def _populateWords(stopWords, similarCriterion, hours, pages):
     start = dateutil.getHoursAs14(hours)
     pages = [ page for page in pages if page['added'] >= start ]
     words = getTopWords(pages, stopWords)
-    _mergeWords(similarRate, pages, words)
+    _mergeWords(similarCriterion, pages, words)
     for word in words:
         keywords = []
         keywords.append(word['name'])
@@ -142,13 +151,13 @@ def _populateWords(stopWords, similarRate, hours, pages):
 
 def calculateWords(wordsConfig, scope, pages):
     stopWords = wordsConfig['stop']
-    similarRate = wordsConfig['similar']
+    similarCriterion = wordsConfig['similar']
     allHours = wordsConfig['hours.all']
     latestHours = wordsConfig['hours.latest']
 
-    allWords = _populateWords(stopWords, similarRate, allHours, pages)
-    latestWords = _populateWords(stopWords, similarRate, latestHours, pages)
-    _saveWords(similarRate, scope, allHours, allWords,)
+    allWords = _populateWords(stopWords, similarCriterion, allHours, pages)
+    latestWords = _populateWords(stopWords, similarCriterion, latestHours, pages)
+    _saveWords(scope, allHours, allWords,)
 
     return allWords, latestWords
 
