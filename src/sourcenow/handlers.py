@@ -6,7 +6,8 @@ import globalconfig
 import globalutil
 
 from headline.handlers import MyHandler
-from sourcenow import bs
+from hotword import hwapi
+from sourcenow import bs, snapi
 
 class Channel(MyHandler):
 
@@ -53,15 +54,11 @@ class Charts(MyHandler):
 class Latest(MyHandler):
 
     def get(self):
-        _LATEST_COUNT = 50
-        result = bs.getLatestPages()
-        globalutil.populateSourceUrl(result['site'])
-        pages = []
-        pages.extend(result['site'])
-        pages.extend(result['charts'])
+        words, pages = hwapi.getWords('sites')
         pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
-        pages = pages[:_LATEST_COUNT]
+        globalutil.populateSourceUrl(pages)
         templateValues = {
+            'words': words,
             'pages': pages,
         }
         self.render(templateValues, 'latest.html')

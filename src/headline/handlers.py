@@ -69,12 +69,12 @@ class Home(MyHandler):
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')
 
-        siteWords = hwapi.getJsonWords('sites')
+        siteWords, _ = hwapi.getWords('sites')
         sitePages = heapi.getEventPages('sites', 12)
         sitePages.sort(key=lambda page: page.get('published')
                                     or page.get('added'), reverse=True)
 
-        chartsWords = hwapi.getJsonWords('chartses')
+        chartsWords, _ = hwapi.getWords('chartses')
         chartsPages = heapi.getEventPages('chartses', 12)
         chartsPages.sort(key=lambda page: page.get('published')
                                     or page.get('added'), reverse=True)
