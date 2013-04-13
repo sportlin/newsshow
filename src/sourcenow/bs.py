@@ -2,7 +2,6 @@
 import logging
 
 from commonutil import collectionutil
-
 from . import models
 
 def _isPageMatched(pageTags, tags):

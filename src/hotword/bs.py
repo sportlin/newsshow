@@ -5,7 +5,7 @@ import logging
 import re
 
 from commonutil import dateutil
-
+import globalutil
 from . import models
 
 
@@ -77,7 +77,7 @@ def _getSimilarValue(parentTitles, childTitles):
     similar = len(i) * 1.0 / len(childTitles)
     return similar
 
-def mergeWords(similarRate, pages, words):
+def _mergeWords(similarRate, pages, words):
     wordTitles = _getWordTitles(pages, words)
     index = 0
     size = len(words)
@@ -110,22 +110,45 @@ def mergeWords(similarRate, pages, words):
             word['children'] = children
         index += 1
 
-def saveWords(similarRate, keyname, allHours, allWords, latestHours, latestWords):
-    nnow = datetime.datetime.utcnow()
+def _saveWords(similarRate, keyname, allHours, allWords):
+    nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     data = {
             'similar': similarRate,
-            'updated': dateutil.getDateAs14(nnow),
-            'all': {
-                'hours': allHours,
-                'words': allWords,
-            },
-            'latest': {
-                'hours': latestHours,
-                'words': latestWords,
-            },
+            'updated': nnow,
+            'hours': allHours,
+            'words': allWords,
         }
     models.saveWords(keyname, data)
 
 def getWords(keyname):
     return models.getWords(keyname)
+
+def _populateWords(stopWords, similarRate, hours, pages):
+    start = dateutil.getHoursAs14(hours)
+    pages = [ page for page in pages if page['added'] >= start ]
+    words = getTopWords(pages, stopWords)
+    _mergeWords(similarRate, pages, words)
+    for word in words:
+        keywords = []
+        keywords.append(word['name'])
+        if word.get('children', []):
+            keywords.append(word['children'][0]['name'])
+        word['keywords'] = keywords
+
+        matched = globalutil.search(pages, keywords)
+        wordPage = max(matched, key=lambda page: page['grade'])
+        word['page'] = wordPage
+    return words
+
+def calculateWords(wordsConfig, scope, pages):
+    stopWords = wordsConfig['stop']
+    similarRate = wordsConfig['similar']
+    allHours = wordsConfig['hours.all']
+    latestHours = wordsConfig['hours.latest']
+
+    allWords = _populateWords(stopWords, similarRate, allHours, pages)
+    latestWords = _populateWords(stopWords, similarRate, latestHours, pages)
+    _saveWords(similarRate, scope, allHours, allWords,)
+
+    return allWords, latestWords
 

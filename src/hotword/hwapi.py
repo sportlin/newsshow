@@ -1,61 +1,15 @@
-import json
-
-import webapp2
-
-from commonutil import stringutil
-
 from . import bs
 
-def _getTitle(word):
-    words = [word['name']]
-    if word.get('children'):
-        words.append(word['children'][0]['name'])
-    return ' '.join(words)
+def calculateTopWords(wordsConfig, scope, pages):
+    return bs.calculateWords(wordsConfig, scope, pages)
 
-def _getKeywords(word):
-    keywords = [word['name']]
-    for item in word.get('children', []):
-        keywords.append(item['name'])
-    return ' '.join(keywords)
-
-def getJsonWords(sentenceSeparators, wordsName):
+def getJsonWords(wordsName):
     data = bs.getWords(wordsName)
-
-    urls = set()
-    latestWords = []
-    for word in data.get('latest', {}).get('words', []):
-        if word['page'].get('url') in urls:
-            continue
-        urls.add(word['page'].get('url'))
-        if word['page'].get('content'):
-            word['page']['content'] = stringutil.getFirstSentence(
-                               sentenceSeparators, word['page']['content'])
-        title = _getKeywords(word)
-        word['page']['keyword'] = title
-        latestWords.append(word['page'])
-
     allWords = []
-    _ALL_EVENTS = 10
-    for index, word in enumerate(data.get('all', {}).get('words', [])):
+    for word in data.get('words', []):
         allWords.append({
-            'text': _getTitle(word),
+            'text': ' '.join(word['keywords']),
             'weight': word['pages'],
-            'keyword': _getKeywords(word),
             })
-        if index < _ALL_EVENTS:
-            if word['page'].get('url') in urls:
-                continue
-            urls.add(word['page'].get('url'))
-            if word['page'].get('content'):
-                word['page']['content'] = stringutil.getFirstSentence(
-                                   sentenceSeparators, word['page']['content'])
-            title = _getKeywords(word)
-            word['page']['keyword'] = title
-            latestWords.append(word['page'])
-            index += 1
-
-    return {
-            'all': allWords,
-            'latest': latestWords,
-        }
+    return allWords
 

@@ -9,6 +9,7 @@ import templateutil.filters
 import configmanager.handlers
 import headline.handlersadmin
 import headline.handlersapi
+import headline.handlersbackend
 import headline.handlers
 import sourcenow.handlers
 import sourcehistory.handlers
@@ -45,8 +46,8 @@ webapp2.Route('/charts/<charts:.+>', handler=sourcenow.handlers.Charts, name='ch
 webapp2.Route('/channel/<channel>/', handler=sourcenow.handlers.Channel, name='channel'),
 webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHistory, name='datasource.history'),
 
-('/words/start/', hotword.handlersapi.Start),
-('/words/run/', hotword.handlersapi.Run),
+('/backends/start/', headline.handlersbackend.Start),
+('/backends/run/', headline.handlersbackend.Run),
 ('/words/show/', hotword.handlers.Show),
 ],
 debug=True, config=config)

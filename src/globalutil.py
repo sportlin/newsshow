@@ -34,3 +34,20 @@ def isBackendsTime():
     tzdate = nnow.astimezone(pytz.timezone(timezonename))
     return tzdate.hour in hours
 
+def search(pages, keywords):
+    result = []
+    ksize = len(keywords)
+    for page in pages:
+        grade = 0
+        for index, keyword in enumerate(keywords):
+            # the top keyword is more important than the bottom one.
+            indexBonus = (ksize - index) * 0.1
+            if stringutil.contains(page.get('keyword', ''), keyword):
+                grade += len(keyword) + indexBonus
+            elif stringutil.contains(page.get('title', ''), keyword):
+                grade += len(keyword) + indexBonus
+        if grade > 0:
+            page['grade'] = grade
+            result.append(page)
+    return result
+

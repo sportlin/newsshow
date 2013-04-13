@@ -6,10 +6,11 @@ from templateutil.handlers import BasicHandler
 from searcher import gnews
 from robotkeyword import rkapi
 
-from hotword import hwapi
 import globalconfig
 import globalutil
 from sourcenow import snapi
+from hotword import hwapi
+from hotevent import heapi
 
 def _getMenu(selectedSlug):
     topics = snapi.getDisplayTopics()
@@ -68,13 +69,23 @@ class Home(MyHandler):
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')
 
-        siteWords = hwapi.getJsonWords(sentenceSeparators, 'sites')
-        chartsWords = hwapi.getJsonWords(sentenceSeparators, 'chartses')
+        siteWords = hwapi.getJsonWords('sites')
+        sitePages = heapi.getEventPages('sites', 12)
+        sitePages.sort(key=lambda page: page.get('published')
+                                    or page.get('added'), reverse=True)
+
+        chartsWords = hwapi.getJsonWords('chartses')
+        chartsPages = heapi.getEventPages('chartses', 12)
+        chartsPages.sort(key=lambda page: page.get('published')
+                                    or page.get('added'), reverse=True)
+
         templateValues = {
             'hoturl': hoturl,
             'latesturl': latesturl,
             'siteWords': siteWords,
+            'sitePages': sitePages,
             'chartsWords': chartsWords,
+            'chartsPages': chartsPages,
         }
         self.render(templateValues, 'home.html')
 
@@ -94,7 +105,7 @@ class Search(MyHandler):
             # words = list(jieba.cut_for_search(keyword))
             keyword = keyword.decode('utf8')
             pages = snapi.getAllPages()
-            pages = snapi.search(pages, words)
+            pages = globalutil.search(pages, words)
             pages.sort(key=lambda page: page.get('added'), reverse=True)
             pages.sort(key=lambda page: page.get('grade'), reverse=True)
             globalutil.populateSourceUrl(pages)
