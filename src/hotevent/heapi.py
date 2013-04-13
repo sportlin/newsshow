@@ -4,6 +4,7 @@ from commonutil import dateutil
 from . import models
 
 def _summarizeEvent(scope, events, word, nnow):
+    createMinSize = 2
     keywords = set(word['keywords'])
     matchedEvent = None
     for event in events['items']:
@@ -11,7 +12,7 @@ def _summarizeEvent(scope, events, word, nnow):
             matchedEvent = event
             break
 
-    if not matchedEvent:
+    if not matchedEvent and len(keywords) >= createMinSize:
         matchedEvent = {}
         matchedEvent['id'] = events['counter']
         matchedEvent['added'] = nnow
@@ -20,11 +21,43 @@ def _summarizeEvent(scope, events, word, nnow):
         events['items'].append(matchedEvent)
         events['counter'] += 1
 
-    matchedEvent['updated'] = nnow
-    matchedEvent['keywords'].update(word['keywords'])
-    matchedEvent['word'] = word
+    if matchedEvent:
+        matchedEvent['updated'] = nnow
+        matchedEvent['keywords'].update(word['keywords'])
+        matchedEvent['word'] = word
+
+    return matchedEvent
+
+def _saveEventItem(scope, eventId, word, nnow):
+    eventItem = models.getEvent(scope, eventId)
+    if not eventItem:
+        eventItem = {
+                'id': eventId,
+                'keywords': [],
+                'added': nnow,
+            }
+    eventItem['updated'] = nnow
+
+    oldKeywords = set(eventItem['keywords'])
+    oldKeywords.update(word['keywords'])
+    eventItem['keywords'] = list(oldKeywords)
+
+    words = eventItem.get('words', [])
+    found = False
+    for childWord in words:
+        if childWord['page'].get('url') == word['page'].get('url'):
+            found = True
+            break
+    if not found:
+        words.insert(0, word)
+    eventItem['words'] = words
+
+    models.saveEvent(scope, eventItem)
 
 def summarizeEvents(scope, words):
+    # Identify less important words first,
+    # so if multiple words map to the same event, the important one win.
+    words.sort(key=lambda word: word['pages'])
     events = models.getEvents(scope)
     if not events:
         events = {
@@ -37,7 +70,9 @@ def summarizeEvents(scope, words):
 
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     for word in words:
-        _summarizeEvent(scope, events, word, nnow)
+        event = _summarizeEvent(scope, events, word, nnow)
+        if event:
+            _saveEventItem(scope, event['id'], word, nnow)
 
     for event in events['items']:
         event['keywords'] = list(event['keywords'])
@@ -48,5 +83,12 @@ def summarizeEvents(scope, words):
 def getEventPages(scope, size):
     events = models.getEvents(scope).get('items', [])
     events = events[:size]
-    return [ event['word']['page'] for event in events ]
+    result = []
+    for event in events:
+        event['word']['page']['event'] = {
+                'id': event['id'],
+                'keyword': ' '.join(event['word']['keywords']),
+            }
+        result.append(event['word']['page'])
+    return result
 

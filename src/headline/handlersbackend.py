@@ -23,14 +23,11 @@ def _runTask():
 
     pages = snapi.getSitePages()
     allWords, latestWords = hwapi.calculateTopWords(wordsConfig, 'sites', pages)
-    heapi.summarizeEvents('sites', allWords[:5])
-    heapi.summarizeEvents('sites', latestWords[:5])
-
+    heapi.summarizeEvents('sites', allWords + latestWords)
 
     pages = snapi.getChartsPages()
     allWords, latestWords = hwapi.calculateTopWords(wordsConfig, 'chartses', pages)
-    heapi.summarizeEvents('chartses', allWords[:5])
-    heapi.summarizeEvents('chartses', latestWords[:5])
+    heapi.summarizeEvents('chartses', allWords + latestWords)
 
 
 class Run(webapp2.RequestHandler):

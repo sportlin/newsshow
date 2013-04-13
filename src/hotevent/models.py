@@ -13,3 +13,9 @@ def saveEvents(scope, value):
 def getEvents(scope):
     return cmapi.getItemValue(scope + '.ids', {}, modelname=HotEvent)
 
+def saveEvent(scope, event):
+    cmapi.saveItem(scope + '.' + str(event['id']), event, modelname=HotEvent)
+
+def getEvent(scope, eventId):
+    return cmapi.getItemValue(scope + '.' + str(eventId), {}, modelname=HotEvent)
+

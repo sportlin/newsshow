@@ -8,8 +8,8 @@ def getJsonWords(wordsName):
     allWords = []
     for word in data.get('words', []):
         allWords.append({
-            'text': ' '.join(word['keywords']),
-            'weight': word['pages'],
+            'keywords': word['keywords'],
+            'pages': word['pages'],
             })
     return allWords
 

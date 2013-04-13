@@ -16,6 +16,7 @@ import sourcehistory.handlers
 
 import hotword.handlersapi
 import hotword.handlers
+import hotevent.handlers
 
 import globalconfig
 
@@ -49,6 +50,7 @@ webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHi
 ('/backends/start/', headline.handlersbackend.Start),
 ('/backends/run/', headline.handlersbackend.Run),
 ('/words/show/', hotword.handlers.Show),
+webapp2.Route('/event/<eventId:.+>/', handler=hotevent.handlers.Event, name='event'),
 ],
 debug=True, config=config)
 
