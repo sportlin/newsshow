@@ -15,3 +15,6 @@ def getSitePages():
 def getChartsPages():
     return models.getPages(keyname='chartses')
 
+def getPagesByTags(pages, tags):
+    return bs.getPagesByTags(pages, tags)
+

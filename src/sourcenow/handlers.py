@@ -20,7 +20,12 @@ class Channel(MyHandler):
         for group in channel['groups']:
             globalutil.populateSourceUrl(group['pages'])
 
+        words, pages = hwapi.getWords(channel['slug'])
+        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
+
         templateValues = {
+            'words': words,
+            'pages': pages,
             'channel': channel,
         }
         self.render(templateValues, 'channel.html')

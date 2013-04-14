@@ -20,9 +20,6 @@ def _isStopWord(stopWordPatterns, word):
 def getTopWords(pages, stopWordPatterns):
     titles = []
     for page in pages:
-        keyword = page.get('keyword')
-        if keyword:
-            titles.append(keyword)
         title = page.get('title')
         if title:
             titles.append(title)
@@ -30,7 +27,14 @@ def getTopWords(pages, stopWordPatterns):
 
     import jieba # May fail to load jieba
     jieba.initialize(usingSmall=False)
-    pwords = jieba.cut(content, cut_all=False)
+    import jieba.posseg as pseg
+    pwords = []
+    flags = ['n', 'ns', 'nr', 'eng']
+    for word in pseg.cut(content):
+        if word.flag not in flags:
+            continue
+        pwords.append(word.word)
+    # pwords = jieba.cut(content, cut_all=False)
     words = []
     for word in pwords:
         # sometime "\r\n\n" encountered
@@ -44,7 +48,7 @@ def getTopWords(pages, stopWordPatterns):
     lastWord = None
     lastCount = 0
     result = []
-    _MIN_WORD_COUNT = 4
+    _MIN_WORD_COUNT = 2
     for word in words:
         if lastWord != word:
             if lastCount >= _MIN_WORD_COUNT:

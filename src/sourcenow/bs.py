@@ -12,7 +12,7 @@ def _isPageMatched(pageTags, tags):
             break
     return matched
 
-def _getPagesByTags(pages, tags, returnMatched=True):
+def getPagesByTags(pages, tags, returnMatched=True):
     result = []
     for page in pages:
         pageTags = page['source']['tags']
@@ -62,7 +62,7 @@ def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
     topicTags = topic.get('tags')
     if not topicTags:
         return []
-    topicPages = _getPagesByTags(pages, topicTags)
+    topicPages = getPagesByTags(pages, topicTags)
     if not topicPages:
         return []
     topicGroups = []
@@ -74,7 +74,7 @@ def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
         groupTags = group.get('tags')
         if not groupTags:
             continue
-        groupPages = _getPagesByTags(topicPages, groupTags)
+        groupPages = getPagesByTags(topicPages, groupTags)
         if not groupPages:
             continue
         validCount += 1
@@ -94,7 +94,7 @@ def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
         if lastTags:
             maxTags = set(usedTags)
             maxTags.update(lastTags)
-            unmatcheds = _getPagesByTags(topicPages, list(maxTags),
+            unmatcheds = getPagesByTags(topicPages, list(maxTags),
                                     returnMatched=False)
             if not unmatcheds:
                 # If the last group is added, all pages are matched.
@@ -103,7 +103,7 @@ def _getTopicPageGroups(topic, pages, groups, maxGroups=-1):
                 topicGroups.append(lastValidGroup)
                 allMatched = True
         if not allMatched:
-            unmatcheds = _getPagesByTags(topicPages, list(usedTags),
+            unmatcheds = getPagesByTags(topicPages, list(usedTags),
                                     returnMatched=False)
     else:# no group is available, all is seen as unmatched.
         unmatcheds = topicPages
