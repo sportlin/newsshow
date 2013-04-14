@@ -28,11 +28,17 @@ class Channel(MyHandler):
 class Hot(MyHandler):
 
     def get(self):
+        PAGE_COUNT = 10
+        words, pages = hwapi.getWords('chartses')
+        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
         chartses = bs.getChartses()
         chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
         for charts in chartses:
             charts['url'] = webapp2.uri_for('charts', charts=charts['source']['slug'])
+            charts['pages'] = charts['pages'][:PAGE_COUNT]
         templateValues = {
+            'words': words,
+            'pages': pages,
             'chartses': chartses,
         }
         self.render(templateValues, 'hot.html')
