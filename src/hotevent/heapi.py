@@ -54,25 +54,26 @@ def _saveEventItem(scope, eventId, word, nnow):
 
     models.saveEvent(scope, eventItem)
 
-def summarizeEvents(scope, words):
-    # Identify less important words first,
-    # so if multiple words map to the same event, the important one win.
-    words.sort(key=lambda word: word['pages'])
+def summarizeEvents(scope, *wordsList):
     events = models.getEvents(scope)
     if not events:
         events = {
             'counter': 0,
             'items': [],
         }
-
     for event in events['items']:
         event['keywords'] = set(event['keywords'])
 
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
-    for word in words:
-        event = _summarizeEvent(scope, events, word, nnow)
-        if event:
-            _saveEventItem(scope, event['id'], word, nnow)
+    for words in wordsList:
+        # Identify less important words first,
+        # so if multiple words map to the same event, the latter one win.
+        words.sort(key=lambda word: word['pages'])
+
+        for word in words:
+            event = _summarizeEvent(scope, events, word, nnow)
+            if event:
+                _saveEventItem(scope, event['id'], word, nnow)
 
     for event in events['items']:
         event['keywords'] = list(event['keywords'])
