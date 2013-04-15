@@ -12,7 +12,9 @@ from sourcenow import bs, snapi
 class Channel(MyHandler):
 
     def get(self, channel):
-        channel = bs.getChannel(channel)
+        timezoneName = self.site.get('timezone')
+        todayStart14 = globalutil.getTodayStartAsUtc14(timezoneName)
+        channel = bs.getChannel(channel, todayStart14)
         if not channel:
             self.error(404)
             return

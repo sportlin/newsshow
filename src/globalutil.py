@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import webapp2
 
@@ -50,4 +51,13 @@ def search(pages, keywords):
             page['grade'] = grade
             result.append(page)
     return result
+
+def getTodayStartAsUtc14(timezonename):
+    tzdate = datetime.datetime.now(tz=pytz.utc)
+    if timezonename:
+        tz  = pytz.timezone(timezonename)
+        tzdate = tzdate.astimezone(tz)
+        tzdate = datetime.datetime(tzdate.year, tzdate.month, tzdate.day, 0, 0, 0, 0, tzinfo=tz)
+        tzdate = tzdate.astimezone(pytz.utc)
+    return datetime.datetime.strftime(tzdate, '%Y%m%d%H%M%S')
 

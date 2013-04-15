@@ -66,19 +66,22 @@ class Home(MyHandler):
     def get(self):
         sentenceSeparators = self.site.get('sentence.separator', [])
 
-        hoturl = webapp2.uri_for('hot')
-        latesturl = webapp2.uri_for('latest')
+        _MIN_SIZE = 12
+        timezoneName = self.site.get('timezone')
+        todayStart14 = globalutil.getTodayStartAsUtc14(timezoneName)
 
         siteWords, _ = hwapi.getWords('sites')
-        sitePages = heapi.getEventPages('sites', 12)
+        sitePages = heapi.getEventPages('sites', todayStart14, _MIN_SIZE)
         sitePages.sort(key=lambda page: page.get('published')
                                     or page.get('added'), reverse=True)
 
         chartsWords, _ = hwapi.getWords('chartses')
-        chartsPages = heapi.getEventPages('chartses', 12)
+        chartsPages = heapi.getEventPages('chartses', todayStart14, _MIN_SIZE)
         chartsPages.sort(key=lambda page: page.get('published')
                                     or page.get('added'), reverse=True)
 
+        hoturl = webapp2.uri_for('hot')
+        latesturl = webapp2.uri_for('latest')
         templateValues = {
             'hoturl': hoturl,
             'latesturl': latesturl,

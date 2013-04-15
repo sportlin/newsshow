@@ -2,6 +2,7 @@
 import logging
 
 from commonutil import collectionutil
+import globalutil
 from . import models
 
 def _isPageMatched(pageTags, tags):
@@ -50,11 +51,12 @@ def _populateTopicGroups(pages, foundTopic):
     topicGroups = _getTopicPageGroups(foundTopic, pages, groups)
     foundTopic['groups'] = topicGroups
 
-def getChannel(slug):
+def getChannel(slug, todayStart14):
     foundTopic = models.getDisplayTopic(slug)
     if not foundTopic:
         return None
     pages = _getAllPages()
+    pages = [ page for page in pages if page['added'] >= todayStart14]
     _populateTopicGroups(pages, foundTopic)
     return foundTopic
 

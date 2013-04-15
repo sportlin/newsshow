@@ -81,9 +81,9 @@ def summarizeEvents(scope, *wordsList):
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
     models.saveEvents(scope, events)
 
-def getEventPages(scope, size):
+def getEventPages(scope, since, size):
     events = models.getEvents(scope).get('items', [])
-    events = events[:size]
+    count = 0
     result = []
     for event in events:
         event['word']['page']['event'] = {
@@ -91,5 +91,8 @@ def getEventPages(scope, size):
                 'keyword': ' '.join(event['word']['keywords']),
             }
         result.append(event['word']['page'])
+        count += 1
+        if count >= size and event['updated'] < since:
+            break
     return result
 
