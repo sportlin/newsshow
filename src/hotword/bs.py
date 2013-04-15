@@ -26,8 +26,9 @@ def getTopWords(pages, stopWordPatterns):
     content = '\n'.join(titles)
 
     import jieba # May fail to load jieba
-    jieba.initialize(usingSmall=False)
+    jieba.initialize(usingSmall=True)
     import jieba.posseg as pseg
+    pseg.loadDictModel(usingSmall=True)
     pwords = []
     flags = ['n', 'ns', 'nr', 'eng']
     for word in pseg.cut(content):
