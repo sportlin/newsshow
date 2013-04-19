@@ -22,18 +22,31 @@ def compressContent(sentenceSeparators, pages):
         page['content'] = stringutil.getFirstSentence(sentenceSeparators, page['content'])
 
 def isBackendsTime():
+    _INTERVAL_MINUTES = 5
     backendsConfig = globalconfig.getBackendsConfig()
     if not backendsConfig:
         return True
-    hours = backendsConfig.get('hours')
-    if not hours:
-        return True
+
     timezonename = backendsConfig.get('timezone')
     if not timezonename:
         return True
+
+    freeHours = backendsConfig.get('hours.free', [])
+    limitHours = backendsConfig.get('hours.limit', [])
+
+    if not freeHours and not limitHours:
+        return True
+
     nnow = datetime.datetime.now(tz=pytz.utc)
     tzdate = nnow.astimezone(pytz.timezone(timezonename))
-    return tzdate.hour in hours
+
+    if tzdate.hour in freeHours:
+        return True
+
+    if tzdate.hour in limitHours and tzdate.minute < _INTERVAL_MINUTES:
+        return True
+
+    return False
 
 def search(pages, keywords):
     result = []
