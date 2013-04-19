@@ -1,10 +1,9 @@
+import json
 import logging
 
 from google.appengine.api import taskqueue
 
 import webapp2
-
-import jsonpickle
 
 from commonutil import networkutil
 
@@ -22,7 +21,7 @@ class HeadlineAddResponse(webapp2.RequestHandler):
 
     def post(self):
         self.response.headers['Content-Type'] = 'text/plain'
-        data = jsonpickle.decode(self.request.body)
+        data = json.loads(self.request.body)
 
         uuid = data.get('uuid')
         if networkutil.isUuidHandled(uuid):

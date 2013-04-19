@@ -2,6 +2,7 @@ import logging
 
 import webapp2
 
+from commonutil import dateutil
 from templateutil.handlers import BasicHandler
 from searcher import gnews
 from robotkeyword import rkapi
@@ -67,18 +68,17 @@ class Home(MyHandler):
         sentenceSeparators = self.site.get('sentence.separator', [])
 
         _MIN_SIZE = 12
-        timezoneName = self.site.get('timezone')
-        todayStart14 = globalutil.getTodayStartAsUtc14(timezoneName)
+        _LATEST_HOURS = 8
+        start14 = dateutil.getHoursAs14(_LATEST_HOURS)
 
         siteWords, _ = hwapi.getWords('sites')
-        sitePages = heapi.getEventPages('sites', todayStart14, _MIN_SIZE)
-        sitePages.sort(key=lambda page: page.get('published')
-                                    or page.get('added'), reverse=True)
+        sitePages = heapi.getEventPages('sites', start14, _MIN_SIZE)
+        sitePages.sort(key=lambda page: page['weight'], reverse=True)
+        globalutil.populateSourceUrl(sitePages)
 
         chartsWords, _ = hwapi.getWords('chartses')
-        chartsPages = heapi.getEventPages('chartses', todayStart14, _MIN_SIZE)
-        chartsPages.sort(key=lambda page: page.get('published')
-                                    or page.get('added'), reverse=True)
+        chartsPages = heapi.getEventPages('chartses', start14, _MIN_SIZE)
+        chartsPages.sort(key=lambda page: page['weight'], reverse=True)
 
         hoturl = webapp2.uri_for('hot')
         latesturl = webapp2.uri_for('latest')

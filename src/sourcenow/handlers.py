@@ -23,7 +23,7 @@ class Channel(MyHandler):
             globalutil.populateSourceUrl(group['pages'])
 
         words, pages = hwapi.getWords(channel['slug'])
-        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
+        pages.sort(key=lambda page: page['weight'], reverse=True)
 
         templateValues = {
             'words': words,
@@ -37,7 +37,7 @@ class Hot(MyHandler):
     def get(self):
         PAGE_COUNT = 10
         words, pages = hwapi.getWords('chartses')
-        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
+        pages.sort(key=lambda page: page['weight'], reverse=True)
         chartses = bs.getChartses()
         chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
         for charts in chartses:
@@ -68,7 +68,7 @@ class Latest(MyHandler):
 
     def get(self):
         words, pages = hwapi.getWords('sites')
-        pages.sort(key=lambda page: page.get('published') or page.get('added'), reverse=True)
+        pages.sort(key=lambda page: page['weight'], reverse=True)
         globalutil.populateSourceUrl(pages)
         templateValues = {
             'words': words,

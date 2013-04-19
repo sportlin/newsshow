@@ -90,6 +90,7 @@ def getEventPages(scope, since, size):
                 'id': event['id'],
                 'keyword': ' '.join(event['word']['keywords']),
             }
+        event['word']['page']['weight'] = event['word']['pages']
         result.append(event['word']['page'])
         count += 1
         if count >= size and event['updated'] < since:
