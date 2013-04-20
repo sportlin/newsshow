@@ -20,13 +20,14 @@ class Start(webapp2.RequestHandler):
 
 def _runTask():
     wordsConfig = globalconfig.getWordsConfig()
+    stopWords = globalconfig.getStopWords()
 
     sitePages = snapi.getSitePages()
-    allWords, latestWords = hwapi.calculateTopWords(wordsConfig, 'sites', sitePages)
+    allWords, latestWords = hwapi.calculateTopWords(wordsConfig, stopWords, 'sites', sitePages)
     heapi.summarizeEvents('sites', allWords, latestWords)
 
     pages = snapi.getChartsPages()
-    allWords, latestWords = hwapi.calculateTopWords(wordsConfig, 'chartses', pages)
+    allWords, latestWords = hwapi.calculateTopWords(wordsConfig, stopWords, 'chartses', pages)
     heapi.summarizeEvents('chartses', allWords, latestWords)
 
     topics = snapi.getDisplayTopics()
@@ -40,7 +41,7 @@ def _runTask():
         topicPages = snapi.getPagesByTags(sitePages, tags)
         if not topicPages:
             continue
-        allWords, latestWords = hwapi.calculateTopWords(wordsConfig, slug, topicPages)
+        allWords, latestWords = hwapi.calculateTopWords(wordsConfig, stopWords, slug, topicPages)
 
 
 class Run(webapp2.RequestHandler):

@@ -48,3 +48,6 @@ def getWordsConfig():
         result['hours.latest'] = 4
     return result
 
+def getStopWords():
+    return cmapi.getItemValue('words.stop', [])
+

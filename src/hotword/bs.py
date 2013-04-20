@@ -17,7 +17,7 @@ def _isStopWord(stopWordPatterns, word):
             break
     return stopped
 
-def getTopWords(pages, stopWordPatterns):
+def getTopWords(pages, stopWordPatterns, stopWords):
     titles = []
     for page in pages:
         title = page.get('title')
@@ -42,8 +42,11 @@ def getTopWords(pages, stopWordPatterns):
         word = word.strip()
         if not word:
             continue
-        if not _isStopWord(stopWordPatterns, word):
-            words.append(word)
+        if word in stopWords:
+            continue
+        if _isStopWord(stopWordPatterns, word):
+            continue
+        words.append(word)
     words.sort()
 
     lastWord = None
@@ -137,10 +140,10 @@ def _saveWords(keyname, allHours, allWords):
 def getWords(keyname):
     return models.getWords(keyname)
 
-def _populateWords(stopWords, similarCriterion, hours, pages):
+def _populateWords(stopWordPatterns, stopWords, similarCriterion, hours, pages):
     start = dateutil.getHoursAs14(hours)
     pages = [ page for page in pages if page['added'] >= start ]
-    words = getTopWords(pages, stopWords)
+    words = getTopWords(pages, stopWordPatterns, stopWords)
     _mergeWords(similarCriterion, pages, words)
     for word in words:
         keywords = []
@@ -154,14 +157,14 @@ def _populateWords(stopWords, similarCriterion, hours, pages):
         word['page'] = wordPage
     return words
 
-def calculateWords(wordsConfig, scope, pages):
-    stopWords = wordsConfig['stop']
+def calculateWords(wordsConfig, stopWords, scope, pages):
+    stopWordPatterns = wordsConfig['stop.patterns']
     similarCriterion = wordsConfig['similar']
     allHours = wordsConfig['hours.all']
     latestHours = wordsConfig['hours.latest']
 
-    allWords = _populateWords(stopWords, similarCriterion, allHours, pages)
-    latestWords = _populateWords(stopWords, similarCriterion, latestHours, pages)
+    allWords = _populateWords(stopWordPatterns, stopWords, similarCriterion, allHours, pages)
+    latestWords = _populateWords(stopWordPatterns, stopWords, similarCriterion, latestHours, pages)
     _saveWords(scope, allHours, allWords,)
 
     return allWords, latestWords

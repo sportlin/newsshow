@@ -1,7 +1,7 @@
 from . import bs
 
-def calculateTopWords(wordsConfig, scope, pages):
-    return bs.calculateWords(wordsConfig, scope, pages)
+def calculateTopWords(wordsConfig, stopWords, scope, pages):
+    return bs.calculateWords(wordsConfig, stopWords, scope, pages)
 
 def getWords(wordsName):
     data = bs.getWords(wordsName)
