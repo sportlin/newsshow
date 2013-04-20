@@ -54,6 +54,25 @@ def _saveEventItem(scope, eventId, word, nnow):
 
     models.saveEvent(scope, eventItem)
 
+def _archiveEvents(scope, events):
+    _MIN_UPDATED_HOURS = 24
+    startTime = dateutil.getHoursAs14(_MIN_UPDATED_HOURS)
+    historEvents = models.getHistoryEvents(scope)
+    if not historEvents:
+        historEvents = {
+            'items': [],
+        }
+    changed = False
+    i = len(events['items']) - 1
+    while i >= 0:
+        if events['items'][i]['updated'] <= startTime:
+            historEvents['items'].append(events['items'][i])
+            del events['items'][i]
+            changed = True
+        i-= 1
+    if changed:
+        models.saveHistoryEvents(scope, historEvents)
+
 def summarizeEvents(scope, *wordsList):
     events = models.getEvents(scope)
     if not events:
@@ -61,6 +80,9 @@ def summarizeEvents(scope, *wordsList):
             'counter': 0,
             'items': [],
         }
+
+    _archiveEvents(scope, events)
+
     for event in events['items']:
         event['keywords'] = set(event['keywords'])
 
