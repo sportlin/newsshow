@@ -67,17 +67,13 @@ class Home(MyHandler):
     def get(self):
         sentenceSeparators = self.site.get('sentence.separator', [])
 
-        _MIN_SIZE = 12
-        _LATEST_HOURS = 8
-        start14 = dateutil.getHoursAs14(_LATEST_HOURS)
-
         siteWords, _ = hwapi.getWords('sites')
-        sitePages = heapi.getEventPages('sites', start14, _MIN_SIZE)
+        sitePages = heapi.getEventPages('sites')
         sitePages.sort(key=lambda page: page['weight'], reverse=True)
         globalutil.populateSourceUrl(sitePages)
 
         chartsWords, _ = hwapi.getWords('chartses')
-        chartsPages = heapi.getEventPages('chartses', start14, _MIN_SIZE)
+        chartsPages = heapi.getEventPages('chartses')
         chartsPages.sort(key=lambda page: page['weight'], reverse=True)
 
         hoturl = webapp2.uri_for('hot')

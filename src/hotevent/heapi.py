@@ -4,15 +4,18 @@ from commonutil import dateutil
 from . import models
 
 def _summarizeEvent(scope, events, word, nnow):
-    createMinSize = 2
     keywords = set(word['keywords'])
+    createMinSize = 2
+    if len(keywords) < createMinSize:
+        return None
+
     matchedEvent = None
     for event in events['items']:
         if keywords.intersection(event['keywords']):
             matchedEvent = event
             break
 
-    if not matchedEvent and len(keywords) >= createMinSize:
+    if not matchedEvent:
         matchedEvent = {}
         matchedEvent['id'] = events['counter']
         matchedEvent['added'] = nnow
@@ -21,10 +24,9 @@ def _summarizeEvent(scope, events, word, nnow):
         events['items'].append(matchedEvent)
         events['counter'] += 1
 
-    if matchedEvent:
-        matchedEvent['updated'] = nnow
-        matchedEvent['keywords'].update(word['keywords'])
-        matchedEvent['word'] = word
+    matchedEvent['updated'] = nnow
+    matchedEvent['keywords'].update(word['keywords'])
+    matchedEvent['word'] = word
 
     return matchedEvent
 
@@ -99,15 +101,19 @@ def summarizeEvents(scope, *wordsList):
 
     for event in events['items']:
         event['keywords'] = list(event['keywords'])
-    events['items'].sort(key=lambda item: item['word']['pages'], reverse=True)
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
+    events['items'].sort(key=lambda item: item['word']['pages'], reverse=True)
+    events['updated'] = nnow
     models.saveEvents(scope, events)
 
-def getEventPages(scope, since, size):
-    events = models.getEvents(scope).get('items', [])
+def getEventPages(scope):
+    eventsData = models.getEvents(scope)
+    events = eventsData.get('items', [])
     count = 0
     result = []
     for event in events:
+        if event['updated'] != eventsData['updated']:
+            continue
         event['word']['page']['event'] = {
                 'id': event['id'],
                 'keyword': ' '.join(event['word']['keywords']),
@@ -115,7 +121,5 @@ def getEventPages(scope, since, size):
         event['word']['page']['weight'] = event['word']['pages']
         result.append(event['word']['page'])
         count += 1
-        if count >= size and event['updated'] < since:
-            break
     return result
 
