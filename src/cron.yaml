@@ -1,5 +1,3 @@
 cron:
-- description: Send requests to calculate hot words.
-  url: /backends/start/
-  schedule: every 5 minutes synchronized
+
 

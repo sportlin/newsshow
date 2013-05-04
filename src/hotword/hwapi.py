@@ -1,10 +1,7 @@
-from . import bs
-
-def calculateTopWords(wordsConfig, stopWords, scope, pages):
-    return bs.calculateWords(wordsConfig, stopWords, scope, pages)
+from . import models
 
 def getWords(wordsName):
-    data = bs.getWords(wordsName)
+    data = models.getWords(wordsName)
     allWords = []
     pages = []
     for word in data.get('words', []):

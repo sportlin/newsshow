@@ -31,23 +31,3 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
-def getBackendsConfig():
-    return cmapi.getItemValue('backends', {})
-
-def getWordsConfig():
-    result = cmapi.getItemValue('words', {})
-    if 'stop' not in result:
-        result['stop'] = []
-    if 'similar' not in result:
-        result['similar'] = {
-                '0': 6
-            }
-    if 'hours.all' not in result:
-        result['hours.all'] = 24
-    if 'hours.latest' not in result:
-        result['hours.latest'] = 4
-    return result
-
-def getStopWords():
-    return cmapi.getItemValue('words.stop', [])
-
