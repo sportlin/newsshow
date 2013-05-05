@@ -3,10 +3,8 @@ from . import models
 
 class Event(MyHandler):
 
-    def get(self, eventId):
-        # Only expose events from sites
-        scope = 'sites'
-        event = models.getEvent(scope, eventId)
+    def get(self, eventScope, eventId):
+        event = models.getEvent(eventScope, eventId)
         if not event:
             self.error(404)
             return

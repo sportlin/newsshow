@@ -3,7 +3,7 @@ import datetime
 from commonutil import dateutil
 from . import models
 
-def _summarizeEvent(scope, events, word, nnow):
+def _summarizeEvent(exposePages, scope, events, word, nnow):
     keywords = set(word['keywords'])
     createMinSize = 2
     if len(keywords) < createMinSize:
@@ -16,14 +16,15 @@ def _summarizeEvent(scope, events, word, nnow):
             break
 
     if not matchedEvent:
+        events['counter'] += 1
         matchedEvent = {}
         matchedEvent['id'] = events['counter']
         matchedEvent['added'] = nnow
         matchedEvent['keywords'] = set()
 
         events['items'].append(matchedEvent)
-        events['counter'] += 1
 
+    matchedEvent['exposed'] = word['pages'] >= exposePages
     matchedEvent['updated'] = nnow
     matchedEvent['keywords'].update(word['keywords'])
     matchedEvent['word'] = word
@@ -68,14 +69,18 @@ def _archiveEvents(scope, events):
     i = len(events['items']) - 1
     while i >= 0:
         if events['items'][i]['updated'] <= startTime:
-            historEvents['items'].append(events['items'][i])
+            if events['items'][i]['exposed']:
+                historEvents['items'].append(events['items'][i])
+                changed = True
+            else:
+                models.removeEvent(scope, events['items'][i]['id'])
             del events['items'][i]
-            changed = True
         i-= 1
     if changed:
         models.saveHistoryEvents(scope, historEvents)
 
-def summarizeEvents(scope, *wordsList):
+def summarizeEvents(eventCriterion, scope, *wordsList):
+    exposePages = eventCriterion['expose.pages']
     events = models.getEvents(scope)
     if not events:
         events = {
@@ -95,7 +100,7 @@ def summarizeEvents(scope, *wordsList):
         words.sort(key=lambda word: word['pages'])
 
         for word in words:
-            event = _summarizeEvent(scope, events, word, nnow)
+            event = _summarizeEvent(exposePages, scope, events, word, nnow)
             if event:
                 _saveEventItem(scope, event['id'], word, nnow)
 
@@ -117,6 +122,7 @@ def getEventPages(scope):
         event['word']['page']['event'] = {
                 'id': event['id'],
                 'keyword': ' '.join(event['word']['keywords']),
+                'exposed': event['exposed'],
             }
         event['word']['page']['weight'] = event['word']['pages']
         result.append(event['word']['page'])

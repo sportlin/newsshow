@@ -7,6 +7,7 @@ from google.appengine.api import taskqueue
 import webapp2
 
 from commonutil import dateutil, networkutil
+import globalconfig
 import globalutil
 from . import models
 from sourcenow import snapi
@@ -53,18 +54,19 @@ class WordsAddResponse(webapp2.RequestHandler):
             return
         networkutil.updateUuids(uuid)
 
+        eventCriterion = globalconfig.getEventCriterion()
         sitePages = snapi.getSitePages()
         chartsPages = snapi.getChartsPages()
 
         siteWords = data.get('sites')
         if siteWords:
             _saveWords('sites', siteWords, sitePages)
-            heapi.summarizeEvents('sites', siteWords)
+            heapi.summarizeEvents(eventCriterion, 'sites', siteWords)
 
         chartsWords = data.get('chartses')
         if chartsWords:
             _saveWords('chartses', chartsWords, chartsPages)
-            heapi.summarizeEvents('chartses', chartsWords)
+            heapi.summarizeEvents(eventCriterion, 'chartses', chartsWords)
 
         channelsWords = data.get('channels', {})
         topics = snapi.getDisplayTopics()

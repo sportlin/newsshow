@@ -31,3 +31,9 @@ def getTopicHomeLatest():
     hours = site.get('topic.home.latest', 10)
     return hours
 
+def getEventCriterion():
+    result = cmapi.getItemValue('event.criterion', {})
+    if 'expose.pages' not in result:
+        result['expose.pages'] = 5
+    return result
+
