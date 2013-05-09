@@ -3,15 +3,21 @@ import datetime
 from commonutil import dateutil
 from . import models
 
+def _isListIntersection(list1, list2):
+    for item in list1:
+        if item in list2:
+            return True
+    return False
+
 def _summarizeEvent(exposePages, scope, events, word, nnow):
-    keywords = set(word['keywords'])
     createMinSize = 2
-    if len(keywords) < createMinSize:
+    if len(word['keywords']) < createMinSize:
         return None
 
     matchedEvent = None
+    latestKeywordsCount = 10
     for event in events['items']:
-        if keywords.intersection(event['keywords']):
+        if _isListIntersection(word['keywords'], event['keywords'][:latestKeywordsCount]):
             matchedEvent = event
             break
 
@@ -20,13 +26,16 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
         matchedEvent = {}
         matchedEvent['id'] = events['counter']
         matchedEvent['added'] = nnow
-        matchedEvent['keywords'] = set()
+        matchedEvent['keywords'] = []
 
         events['items'].append(matchedEvent)
 
     matchedEvent['exposed'] = word['pages'] >= exposePages
     matchedEvent['updated'] = nnow
-    matchedEvent['keywords'].update(word['keywords'])
+    for keyword in reversed(word['keywords']):
+        if keyword in matchedEvent['keywords']:
+            matchedEvent['keywords'].remove(keyword)
+        matchedEvent['keywords'].insert(0, keyword)
     matchedEvent['word'] = word
 
     return matchedEvent
@@ -41,25 +50,28 @@ def _saveEventItem(scope, eventId, word, nnow):
             }
     eventItem['updated'] = nnow
 
-    oldKeywords = set(eventItem['keywords'])
-    oldKeywords.update(word['keywords'])
-    eventItem['keywords'] = list(oldKeywords)
-
     words = eventItem.get('words', [])
     found = False
     for childWord in words:
         if childWord['page'].get('url') == word['page'].get('url'):
             found = True
             break
-    if not found:
-        words.insert(0, word)
+    if found:
+        return
+    words.insert(0, word)
     eventItem['words'] = words
+
+    for keyword in reversed(word['keywords']):
+        if keyword not in eventItem['keywords']:
+            eventItem['keywords'].insert(0, keyword)
 
     models.saveEvent(scope, eventItem)
 
 def _archiveEvents(scope, events):
     _MIN_UPDATED_HOURS = 24
+    _MIN_DDED_HOURS = 24
     startTime = dateutil.getHoursAs14(_MIN_UPDATED_HOURS)
+    addedStartTime = dateutil.getHoursAs14(_MIN_DDED_HOURS)
     historEvents = models.getHistoryEvents(scope)
     if not historEvents:
         historEvents = {
@@ -68,7 +80,7 @@ def _archiveEvents(scope, events):
     changed = False
     i = len(events['items']) - 1
     while i >= 0:
-        if events['items'][i]['updated'] <= startTime:
+        if events['items'][i]['updated'] <= startTime or events['items'][i]['added'] <= startTime:
             if events['items'][i]['exposed']:
                 historEvents['items'].append(events['items'][i])
                 changed = True
@@ -90,9 +102,6 @@ def summarizeEvents(eventCriterion, scope, *wordsList):
 
     _archiveEvents(scope, events)
 
-    for event in events['items']:
-        event['keywords'] = set(event['keywords'])
-
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     for words in wordsList:
         # Identify less important words first,
@@ -104,8 +113,6 @@ def summarizeEvents(eventCriterion, scope, *wordsList):
             if event:
                 _saveEventItem(scope, event['id'], word, nnow)
 
-    for event in events['items']:
-        event['keywords'] = list(event['keywords'])
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
     events['items'].sort(key=lambda item: item['word']['pages'], reverse=True)
     events['updated'] = nnow
@@ -121,7 +128,7 @@ def getEventPages(scope):
             continue
         event['word']['page']['event'] = {
                 'id': event['id'],
-                'keyword': ' '.join(event['word']['keywords']),
+                'keyword': ', '.join(event['word']['keywords']),
                 'exposed': event['exposed'],
             }
         event['word']['page']['weight'] = event['word']['pages']

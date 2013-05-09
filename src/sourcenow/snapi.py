@@ -5,12 +5,12 @@ def getDisplayTopics():
     return models.getDisplayTopics()
 
 def getAllPages():
-    sitePages = models.getPages(keyname='datasources')
+    sitePages = models.getPages(keyname='sites')
     chartsPages = models.getPages(keyname='chartses')
     return sitePages + chartsPages
 
 def getSitePages():
-    return models.getPages(keyname='datasources')
+    return models.getPages(keyname='sites')
 
 def getChartsPages():
     return models.getPages(keyname='chartses')

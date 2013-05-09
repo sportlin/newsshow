@@ -18,7 +18,7 @@ def receiveData(datasource, items):
     if datasource.get('charts'):
         keyname = 'chartses'
     else:
-        keyname = 'datasources'
+        keyname = 'sites'
     _saveDatasource(datasource, items, keyname)
 
 class DataReceiver(datareceiver.BasicDataReceiver):
@@ -75,7 +75,7 @@ def getDisplayTopic(topicSlug):
 
 def getDatasources(keyname=None):
     if not keyname:
-        keyname = 'datasources'
+        keyname = 'sites'
     return cmapi.getItemValue(keyname, [], modelname=LatestItem)
 
 def getPages(datasources=None, keyname=None):

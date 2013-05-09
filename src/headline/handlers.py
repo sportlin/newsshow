@@ -38,6 +38,8 @@ class MyHandler(BasicHandler):
     def doRedirection(self):
         if self.request.path.startswith('/search/'):
             return False
+        if self.request.path.startswith('/event/'):
+            return False
         referer = self.request.referer
         if not referer:
             return False

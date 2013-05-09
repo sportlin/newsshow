@@ -22,6 +22,7 @@ class WordsAddRequest(webapp2.RequestHandler):
         self.response.out.write('Request is accepted.')
 
 def _saveWords(keyname, words, pages):
+    matchedWords = []
     for word in words:
         keywords = []
         keywords.append(word['name'])
@@ -33,10 +34,11 @@ def _saveWords(keyname, words, pages):
         if matched:
             wordPage = max(matched, key=lambda page: page['grade'])
             word['page'] = wordPage
+            matchedWords.append(word)
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     data = {
             'updated': nnow,
-            'words': words,
+            'words': matchedWords,
         }
     models.saveWords(keyname, data)
 
