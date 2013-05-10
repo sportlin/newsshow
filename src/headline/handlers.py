@@ -13,7 +13,7 @@ from sourcenow import snapi
 from hotword import hwapi
 from hotevent import heapi
 
-def _getMenu(selectedSlug):
+def _getMenus():
     topics = snapi.getDisplayTopics()
     topicMenus = []
     for topic in topics:
@@ -27,13 +27,10 @@ def _getMenu(selectedSlug):
         topicMenus.append({
             'name': topicName,
             'url': url,
-            'selected': selectedSlug == topicSlug,
         })
     return topicMenus
 
 class MyHandler(BasicHandler):
-    channelSlug = None
-    showtype = None
 
     def doRedirection(self):
         if self.request.path.startswith('/search/'):
@@ -60,8 +57,9 @@ class MyHandler(BasicHandler):
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        self.channelSlug = self.request.route_kwargs.get('channel')
-        self.extraValues['menu'] = _getMenu(self.channelSlug)
+        self.extraValues['extramenus'] = _getMenus()
+        self.extraValues['hoturl'] = webapp2.uri_for('hot')
+        self.extraValues['latesturl'] = webapp2.uri_for('latest')
 
 
 class Home(MyHandler):
@@ -83,11 +81,7 @@ class Home(MyHandler):
             page['event']['url'] = webapp2.uri_for('event', eventScope='chartses', eventId=page['event']['id'])
         chartsPages.sort(key=lambda page: page['weight'], reverse=True)
 
-        hoturl = webapp2.uri_for('hot')
-        latesturl = webapp2.uri_for('latest')
         templateValues = {
-            'hoturl': hoturl,
-            'latesturl': latesturl,
             'siteWords': siteWords,
             'sitePages': sitePages,
             'chartsWords': chartsWords,
