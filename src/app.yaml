@@ -21,6 +21,10 @@ handlers:
 - url: /media/8
   static_dir: html/media
 
+- url: /admin/config/.*
+  script: library.configmanager.main.app
+  login: admin
+
 - url: /.*
   script: main.app
 
