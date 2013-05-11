@@ -4,7 +4,12 @@ def getWords(wordsName):
     data = models.getWords(wordsName)
     allWords = []
     pages = []
+    urls = set()
     for word in data.get('words', []):
+        url = word['page'].get('url')
+        if url in urls:
+            continue
+        urls.add(url)
         allWords.append({
             'keywords': word['keywords'],
             'pages': word['pages'],

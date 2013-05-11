@@ -58,13 +58,28 @@ class MyHandler(BasicHandler):
 
     def prepareValues(self):
         self.extraValues['extramenus'] = _getMenus()
-        self.extraValues['hoturl'] = webapp2.uri_for('hot')
         self.extraValues['latesturl'] = webapp2.uri_for('latest')
+        self.extraValues['sitesurl'] = webapp2.uri_for('sites')
+        self.extraValues['chartsesurl'] = webapp2.uri_for('chartses')
 
 
 class Home(MyHandler):
 
     def get(self):
+        _LATEST_COUNT = 20
+        sitePages = snapi.getSitePages()
+        sitePages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+        sitePages = sitePages[:_LATEST_COUNT]
+        globalutil.populateSourceUrl(sitePages)
+
+        chartsPages = snapi.getChartsPages()
+        chartsPages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+        chartsPages = chartsPages[:_LATEST_COUNT]
+
+        latestPages = sitePages + chartsPages
+        latestPages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+        latestPages = latestPages[:_LATEST_COUNT]
+
         sentenceSeparators = self.site.get('sentence.separator', [])
 
         siteWords, _ = hwapi.getWords('sites')
@@ -82,6 +97,7 @@ class Home(MyHandler):
         chartsPages.sort(key=lambda page: page['weight'], reverse=True)
 
         templateValues = {
+            'latestPages': latestPages,
             'siteWords': siteWords,
             'sitePages': sitePages,
             'chartsWords': chartsWords,

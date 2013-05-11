@@ -123,9 +123,14 @@ def getEventPages(scope):
     events = eventsData.get('items', [])
     count = 0
     result = []
+    urls = set()
     for event in events:
         if event['updated'] != eventsData['updated']:
             continue
+        url = event['word']['page'].get('url')
+        if url in urls:
+            continue
+        urls.add(url)
         event['word']['page']['event'] = {
                 'id': event['id'],
                 'keyword': ', '.join(event['word']['keywords']),

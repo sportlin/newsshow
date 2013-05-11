@@ -38,8 +38,9 @@ webapp2.Route('/search/<keyword:.*>', handler=headline.handlers.Search, name='se
 ('/api/headline/add/', headline.handlersapi.HeadlineAddRequest),
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 
-webapp2.Route('/hot/', handler=sourcenow.handlers.Hot, name='hot'),
 webapp2.Route('/latest/', handler=sourcenow.handlers.Latest, name='latest'),
+webapp2.Route('/sites/', handler=sourcenow.handlers.Sites, name='sites'),
+webapp2.Route('/chartses/', handler=sourcenow.handlers.Chartses, name='chartses'),
 webapp2.Route('/charts/<charts:.+>', handler=sourcenow.handlers.Charts, name='charts'),
 webapp2.Route('/channel/<channel>/', handler=sourcenow.handlers.Channel, name='channel'),
 webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHistory, name='datasource.history'),

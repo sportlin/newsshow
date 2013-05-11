@@ -32,7 +32,7 @@ class Channel(MyHandler):
         }
         self.render(templateValues, 'channel.html')
 
-class Hot(MyHandler):
+class Chartses(MyHandler):
 
     def get(self):
         PAGE_COUNT = 10
@@ -48,7 +48,7 @@ class Hot(MyHandler):
             'pages': pages,
             'chartses': chartses,
         }
-        self.render(templateValues, 'hot.html')
+        self.render(templateValues, 'chartses.html')
 
 class Charts(MyHandler):
 
@@ -64,7 +64,7 @@ class Charts(MyHandler):
         }
         self.render(templateValues, 'charts.html')
 
-class Latest(MyHandler):
+class Sites(MyHandler):
 
     def get(self):
         words, pages = hwapi.getWords('sites')
@@ -72,6 +72,19 @@ class Latest(MyHandler):
         globalutil.populateSourceUrl(pages)
         templateValues = {
             'words': words,
+            'pages': pages,
+        }
+        self.render(templateValues, 'sites.html')
+
+class Latest(MyHandler):
+
+    def get(self):
+        sitePages = snapi.getSitePages()
+        globalutil.populateSourceUrl(sitePages)
+        chartsPages = snapi.getChartsPages()
+        pages = sitePages + chartsPages
+        pages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+        templateValues = {
             'pages': pages,
         }
         self.render(templateValues, 'latest.html')

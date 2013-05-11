@@ -129,11 +129,3 @@ def getCharts(slug):
 def getChartses():
     return models.getDatasources('chartses')
 
-def getLatestPages():
-    chartsPages = models.getPages(keyname='chartses')
-    sitePages = models.getPages(keyname='sites')
-    return {
-        'charts': chartsPages,
-        'site': sitePages,
-    }
-
