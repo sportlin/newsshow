@@ -62,9 +62,6 @@ def cleanData():
 def getDisplayTopics():
     return cmapi.getItemValue('display.topics', [], modelname=DisplayItem)
 
-def getDisplayGroups():
-    return cmapi.getItemValue('display.groups', [], modelname=DisplayItem)
-
 def getDisplayTopic(topicSlug):
     foundTopic = None
     for topic in getDisplayTopics():

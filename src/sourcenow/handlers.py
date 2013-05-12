@@ -12,15 +12,13 @@ from sourcenow import bs, snapi
 class Channel(MyHandler):
 
     def get(self, channel):
-        timezoneName = self.site.get('timezone')
-        todayStart14 = globalutil.getTodayStartAsUtc14(timezoneName)
-        channel = bs.getChannel(channel, todayStart14)
+        channel = bs.getChannel(channel)
         if not channel:
             self.error(404)
             return
 
-        for group in channel['groups']:
-            globalutil.populateSourceUrl(group['pages'])
+        globalutil.populateSourceUrl(channel['pages'])
+        channel['pages'].sort(key=lambda page: page['added'], reverse=True)
 
         words, pages = hwapi.getWords(channel['slug'])
         pages.sort(key=lambda page: page['weight'], reverse=True)
