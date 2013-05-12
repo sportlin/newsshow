@@ -14,21 +14,21 @@ from hotword import hwapi
 from hotevent import heapi
 
 def _getMenus():
-    topics = snapi.getDisplayTopics()
-    topicMenus = []
-    for topic in topics:
-        topicSlug = topic.get('slug')
-        topicName = topic.get('name')
-        if not topicSlug:
+    channels = snapi.getChannels()
+    menus = []
+    for channel in channels:
+        slug = channel.get('slug')
+        name = channel.get('name')
+        if not slug:
             continue
-        if not topicName:
+        if not name:
             continue
-        url = webapp2.uri_for('channel', channel=topicSlug)
-        topicMenus.append({
-            'name': topicName,
+        url = webapp2.uri_for('channel', channel=slug)
+        menus.append({
+            'name': name,
             'url': url,
         })
-    return topicMenus
+    return menus
 
 class MyHandler(BasicHandler):
 

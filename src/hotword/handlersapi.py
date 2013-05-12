@@ -71,20 +71,20 @@ class WordsAddResponse(webapp2.RequestHandler):
             heapi.summarizeEvents(eventCriterion, 'chartses', chartsWords)
 
         channelsWords = data.get('channels', {})
-        topics = snapi.getDisplayTopics()
-        for topic in topics:
-            slug = topic.get('slug')
+        channels = snapi.getChannels()
+        for channel in channels:
+            slug = channel.get('slug')
             if not slug:
                 continue
-            tags = topic.get('tags')
+            tags = channel.get('tags')
             if not tags:
                 continue
-            topicPages = snapi.getPagesByTags(sitePages, tags)
-            if not topicPages:
+            channelPages = snapi.getPagesByTags(sitePages, tags)
+            if not channelPages:
                 continue
-            topicWords = channelsWords.get(slug)
-            if topicWords:
-                _saveWords(slug, topicWords, topicPages)
+            channelWords = channelsWords.get(slug)
+            if channelWords:
+                _saveWords(slug, channelWords, channelPages)
 
         self.response.out.write('Done.')
 

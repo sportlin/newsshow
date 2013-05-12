@@ -8,11 +8,7 @@ from headline import datareceiver
 class LatestItem(configmanager.models.ConfigItem):
     pass
 
-class DisplayItem(configmanager.models.ConfigItem):
-    pass
-
 cmapi.registerModel(LatestItem)
-cmapi.registerModel(DisplayItem)
 
 def receiveData(datasource, items):
     if datasource.get('charts'):
@@ -59,16 +55,8 @@ def _saveDatasource(datasource, items, keyname):
 def cleanData():
     pass
 
-def getDisplayTopics():
-    return cmapi.getItemValue('display.topics', [], modelname=DisplayItem)
-
-def getDisplayTopic(topicSlug):
-    foundTopic = None
-    for topic in getDisplayTopics():
-        if topic.get('slug') == topicSlug:
-            foundTopic = topic
-            break
-    return foundTopic
+def getChannels():
+    return cmapi.getItemValue('channels', [])
 
 def getDatasources(keyname=None):
     if not keyname:

@@ -1,8 +1,8 @@
 from commonutil import stringutil
 from . import bs, models
 
-def getDisplayTopics():
-    return models.getDisplayTopics()
+def getChannels():
+    return models.getChannels()
 
 def getAllPages():
     sitePages = models.getPages(keyname='sites')
