@@ -50,5 +50,5 @@ webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHi
 ('/words/add/', hotword.handlersapi.WordsAddResponse),
 webapp2.Route('/event/<eventScope:[^/]+>/<eventId:[^/]+>/', handler=hotevent.handlers.Event, name='event'),
 ],
-debug=True, config=config)
+debug=False, config=config)
 

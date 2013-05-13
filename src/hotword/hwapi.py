@@ -12,15 +12,15 @@ def getWords(wordsName):
         urls.add(url)
         allWords.append({
             'keywords': word['keywords'],
-            'pages': word['pages'],
+            'weight': word['weight'],
             })
         word['page']['keywords'] = word['keywords']
-        word['page']['weight'] = word['pages']
+        word['page']['weight'] = word['weight']
         pages.append(word['page'])
 
     _WORDS_SIZE = 30
     allWords.sort(key=lambda word: len(word['keywords']), reverse=True)
-    allWords.sort(key=lambda word: word['pages'], reverse=True)
+    allWords.sort(key=lambda word: word['weight'], reverse=True)
     allWords = allWords[:_WORDS_SIZE]
 
     return allWords, pages

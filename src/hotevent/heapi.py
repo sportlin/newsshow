@@ -30,7 +30,7 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
 
         events['items'].append(matchedEvent)
 
-    matchedEvent['exposed'] = word['pages'] >= exposePages
+    matchedEvent['exposed'] = word['weight'] >= exposePages
     matchedEvent['updated'] = nnow
     for keyword in reversed(word['keywords']):
         if keyword in matchedEvent['keywords']:
@@ -106,7 +106,7 @@ def summarizeEvents(eventCriterion, scope, *wordsList):
     for words in wordsList:
         # Identify less important words first,
         # so if multiple words map to the same event, the latter one win.
-        words.sort(key=lambda word: word['pages'])
+        words.sort(key=lambda word: word['weight'])
 
         for word in words:
             event = _summarizeEvent(exposePages, scope, events, word, nnow)
@@ -114,7 +114,7 @@ def summarizeEvents(eventCriterion, scope, *wordsList):
                 _saveEventItem(scope, event['id'], word, nnow)
 
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
-    events['items'].sort(key=lambda item: item['word']['pages'], reverse=True)
+    events['items'].sort(key=lambda item: item['word']['weight'], reverse=True)
     events['updated'] = nnow
     models.saveEvents(scope, events)
 
@@ -136,7 +136,7 @@ def getEventPages(scope):
                 'keyword': ', '.join(event['word']['keywords']),
                 'exposed': event['exposed'],
             }
-        event['word']['page']['weight'] = event['word']['pages']
+        event['word']['page']['weight'] = event['word']['weight']
         result.append(event['word']['page'])
         count += 1
     return result
