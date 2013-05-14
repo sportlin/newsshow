@@ -1,6 +1,7 @@
 import datetime
 
 from commonutil import dateutil
+import globalutil
 from . import models
 
 def _isListIntersection(list1, list2):
@@ -40,7 +41,7 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
 
     return matchedEvent
 
-def _saveEventItem(scope, eventId, word, nnow):
+def _saveEventItem(scope, eventId, word, nnow, pages):
     eventItem = models.getEvent(scope, eventId)
     if not eventItem:
         eventItem = {
@@ -50,22 +51,26 @@ def _saveEventItem(scope, eventId, word, nnow):
             }
     eventItem['updated'] = nnow
 
-    words = eventItem.get('words', [])
-    found = False
-    for childWord in words:
-        if childWord['page'].get('url') == word['page'].get('url'):
-            found = True
-            break
-    if found:
-        return
-    words.insert(0, word)
-    eventItem['words'] = words
+    matcheds = globalutil.search(pages, word['keywords'])
+    eventPages = eventItem.get('pages', [])
+    changed = False
+    for matched in reversed(matcheds):
+        found = False
+        for eventPage in eventPages:
+            if eventPage.get('url') == matched.get('url'):
+                found = True
+                break
+        if not found:
+            matched['keywords'] = word['keywords']
+            eventPages.insert(0, matched)
+            changed = True
+    eventItem['pages'] = eventPages
 
     for keyword in reversed(word['keywords']):
         if keyword not in eventItem['keywords']:
             eventItem['keywords'].insert(0, keyword)
-
-    models.saveEvent(scope, eventItem)
+    if changed:
+        models.saveEvent(scope, eventItem)
 
 def _archiveEvents(scope, events):
     _MIN_UPDATED_HOURS = 24
@@ -91,7 +96,7 @@ def _archiveEvents(scope, events):
     if changed:
         models.saveHistoryEvents(scope, historEvents)
 
-def summarizeEvents(eventCriterion, scope, *wordsList):
+def summarizeEvents(eventCriterion, scope, words, pages):
     exposePages = eventCriterion['expose.pages']
     events = models.getEvents(scope)
     if not events:
@@ -103,15 +108,14 @@ def summarizeEvents(eventCriterion, scope, *wordsList):
     _archiveEvents(scope, events)
 
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
-    for words in wordsList:
-        # Identify less important words first,
-        # so if multiple words map to the same event, the latter one win.
-        words.sort(key=lambda word: word['weight'])
+    # Identify less important words first,
+    # so if multiple words map to the same event, the latter one win.
+    words.sort(key=lambda word: word['weight'])
 
-        for word in words:
-            event = _summarizeEvent(exposePages, scope, events, word, nnow)
-            if event:
-                _saveEventItem(scope, event['id'], word, nnow)
+    for word in words:
+        event = _summarizeEvent(exposePages, scope, events, word, nnow)
+        if event:
+            _saveEventItem(scope, event['id'], word, nnow, pages)
 
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
     events['items'].sort(key=lambda item: item['word']['weight'], reverse=True)

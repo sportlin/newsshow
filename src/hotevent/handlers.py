@@ -8,10 +8,8 @@ class Event(MyHandler):
         if not event:
             self.error(404)
             return
-        pages = [ word['page'] for word in event['words'] ]
         templateValues = {
             'event': event,
-            'pages': pages,
         }
         self.render(templateValues, 'event.html')
 

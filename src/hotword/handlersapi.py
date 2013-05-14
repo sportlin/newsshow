@@ -63,12 +63,12 @@ class WordsAddResponse(webapp2.RequestHandler):
         siteWords = data.get('sites')
         if siteWords:
             _saveWords('sites', siteWords, sitePages)
-            heapi.summarizeEvents(eventCriterion, 'sites', siteWords)
+            heapi.summarizeEvents(eventCriterion, 'sites', siteWords, sitePages)
 
         chartsWords = data.get('chartses')
         if chartsWords:
             _saveWords('chartses', chartsWords, chartsPages)
-            heapi.summarizeEvents(eventCriterion, 'chartses', chartsWords)
+            heapi.summarizeEvents(eventCriterion, 'chartses', chartsWords, chartsPages)
 
         channelsWords = data.get('channels', {})
         channels = snapi.getChannels()

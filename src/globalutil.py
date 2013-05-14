@@ -51,6 +51,7 @@ def isBackendsTime():
 def search(pages, keywords):
     result = []
     ksize = len(keywords)
+    urls = set()
     for page in pages:
         grade = 0
         for index, keyword in enumerate(keywords):
@@ -61,8 +62,13 @@ def search(pages, keywords):
             elif stringutil.contains(page.get('title', ''), keyword):
                 grade += len(keyword) + indexBonus
         if grade > 0:
+            if page.get('url') in urls:
+                continue
+            urls.add(page.get('url'))
             page['grade'] = grade
             result.append(page)
+    result.sort(key=lambda page: page.get('added'), reverse=True)
+    result.sort(key=lambda page: page['grade'], reverse=True)
     return result
 
 def getTodayStartAsUtc14(timezonename):

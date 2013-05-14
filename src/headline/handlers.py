@@ -122,8 +122,6 @@ class Search(MyHandler):
             keyword = keyword.decode('utf8')
             pages = snapi.getAllPages()
             pages = globalutil.search(pages, words)
-            pages.sort(key=lambda page: page.get('added'), reverse=True)
-            pages.sort(key=lambda page: page.get('grade'), reverse=True)
             globalutil.populateSourceUrl(pages)
 
             gpages = gnews.search(keyword, large=True)

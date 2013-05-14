@@ -32,3 +32,21 @@ def saveHistoryEvents(scope, value):
 def getHistoryEvents(scope):
     return cmapi.getItemValue(scope + '.history', {}, modelname=HotEvents)
 
+def cleanData(scope):
+    events = getEvents(scope)
+
+    eventsH = getHistoryEvents(scope)
+    for event in events.get('items', []) + eventsH.get('items', []):
+        eventItem = getEvent(scope, event['id'])
+        if not eventItem:
+            continue
+        if 'words' not in eventItem:
+            continue
+        words = eventItem.get('words', [])
+        pages = eventItem.get('pages', [])
+        for childWord in words:
+            pages.append(childWord['page'])
+        del eventItem['words']
+        eventItem['pages'] = pages
+        saveEvent(scope, eventItem)
+
