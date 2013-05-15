@@ -85,15 +85,23 @@ class Home(MyHandler):
         siteWords, _ = hwapi.getWords('sites')
         sitePages = heapi.getEventPages('sites')
         for page in sitePages:
+            if page['event']['exposed']:
+                eventUrlType = 'event'
+            else:
+                eventUrlType = 'hidden-event'
             # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
-            page['event']['url'] = webapp2.uri_for('event', eventScope='sites', eventId=page['event']['id'])
+            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='sites', eventId=page['event']['id'])
         sitePages.sort(key=lambda page: page['weight'], reverse=True)
         globalutil.populateSourceUrl(sitePages)
 
         chartsWords, _ = hwapi.getWords('chartses')
         chartsPages = heapi.getEventPages('chartses')
         for page in chartsPages:
-            page['event']['url'] = webapp2.uri_for('event', eventScope='chartses', eventId=page['event']['id'])
+            if page['event']['exposed']:
+                eventUrlType = 'event'
+            else:
+                eventUrlType = 'hidden-event'
+            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='chartses', eventId=page['event']['id'])
         chartsPages.sort(key=lambda page: page['weight'], reverse=True)
 
         templateValues = {
