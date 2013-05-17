@@ -35,13 +35,15 @@ class MyHandler(BasicHandler):
     def doRedirection(self):
         if self.request.path.startswith('/search/'):
             return False
-        if self.request.path.startswith('/event/'):
-            return False
         referer = self.request.referer
         if not referer:
             return False
         keyword = rkapi.getRefererKeyword(referer)
         if not keyword:
+            return False
+        if self.request.path.startswith('/event/'):
+            if keyword:
+                self.extraValues['keyword'] = keyword
             return False
         reserveds = self.site.get('reserved.keywords',[])
         for reserved in reserveds:
