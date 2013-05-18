@@ -32,7 +32,7 @@ def _saveWords(keyname, words, pages):
 
         matched = globalutil.search(pages, keywords)
         if matched:
-            wordPage = max(matched, key=lambda page: page['grade'])
+            wordPage = matched[0]
             word['page'] = wordPage
             matchedWords.append(word)
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())

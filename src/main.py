@@ -51,5 +51,5 @@ webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHi
 webapp2.Route('/event/<eventScope:[^/]+>/<eventId:[^/]+>/', handler=hotevent.handlers.Event, name='event'),
 webapp2.Route('/hidden/event/<eventScope:[^/]+>/<eventId:[^/]+>/', handler=hotevent.handlers.Event, name='hidden-event'),
 ],
-debug=False, config=config)
+debug=os.environ['SERVER_SOFTWARE'].startswith('Dev'), config=config)
 

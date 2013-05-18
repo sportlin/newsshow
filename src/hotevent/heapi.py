@@ -54,7 +54,7 @@ def _saveEventItem(scope, eventId, word, nnow, pages):
     matcheds = globalutil.search(pages, word['keywords'])
     eventPages = eventItem.get('pages', [])
     changed = False
-    for matched in reversed(matcheds):
+    for matched in matcheds:
         found = False
         for eventPage in eventPages:
             if eventPage.get('url') == matched.get('url'):
@@ -62,7 +62,7 @@ def _saveEventItem(scope, eventId, word, nnow, pages):
                 break
         if not found:
             matched['keywords'] = word['keywords']
-            eventPages.insert(0, matched)
+            eventPages.append(matched)
             changed = True
     eventItem['pages'] = eventPages
 

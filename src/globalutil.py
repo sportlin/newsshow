@@ -69,6 +69,8 @@ def search(pages, keywords):
             result.append(page)
     result.sort(key=lambda page: page.get('added'), reverse=True)
     result.sort(key=lambda page: page['grade'], reverse=True)
+    for page in result:
+        del page['grade']
     return result
 
 def getTodayStartAsUtc14(timezonename):
