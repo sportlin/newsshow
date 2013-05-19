@@ -55,9 +55,7 @@ class Charts(MyHandler):
         if not charts:
             self.error(404)
             return
-        hoturl = webapp2.uri_for('hot')
         templateValues = {
-            'hoturl': hoturl,
             'charts': charts,
         }
         self.render(templateValues, 'charts.html')
