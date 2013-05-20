@@ -9,29 +9,23 @@ handlers:
   static_files: html/site/favicon.ico
   upload: html/site/favicon.ico
   mime_type: image/x-icon
-
 - url: /robots.txt
   static_files: html/site/robots.txt
   upload: html/site/robots.txt
-
 - url: /sitemap.xml
   static_files: html/site/sitemap.xml
   upload: html/site/sitemap.xml
-
 - url: /media/9
   static_dir: html/media
-
 - url: /admin/config/.*
   script: library.configmanager.main.app
   login: admin
-
 - url: /.*
   script: main.app
 
 libraries:
 - name: jinja2
   version: "2.6"
-
 - name: lxml
   version: latest
 

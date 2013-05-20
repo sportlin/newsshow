@@ -30,8 +30,8 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
         matchedEvent['keywords'] = []
 
         events['items'].append(matchedEvent)
-
-    matchedEvent['exposed'] = word['weight'] >= exposePages
+    if not matchedEvent.get('exposed'):
+        matchedEvent['exposed'] = word['weight'] >= exposePages
     matchedEvent['updated'] = nnow
     for keyword in reversed(word['keywords']):
         if keyword in matchedEvent['keywords']:

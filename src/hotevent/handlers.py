@@ -10,7 +10,8 @@ class Event(MyHandler):
         if not event:
             self.error(404)
             return
-        event['pages'].sort(key=lambda page: page['added'], reverse=True)
+        event['pages'].sort(key=lambda page: page.get('published')
+                                or page['added'], reverse=True)
         if 'keyword' in self.extraValues:
             import jieba # May fail to load jieba
             jieba.initialize(usingSmall=True)
