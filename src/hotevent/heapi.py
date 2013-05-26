@@ -113,6 +113,8 @@ def summarizeEvents(eventCriterion, scope, words, pages):
     words.sort(key=lambda word: word['weight'])
 
     for word in words:
+        if 'page' not in word:
+            continue
         event = _summarizeEvent(exposePages, scope, events, word, nnow)
         if event:
             _saveEventItem(scope, event['id'], word, nnow, pages)

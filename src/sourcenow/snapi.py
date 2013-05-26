@@ -4,6 +4,13 @@ from . import bs, models
 def getChannels():
     return models.getChannels()
 
+def getChannel(slug):
+    channels = getChannels()
+    for channel in channels:
+        if channel.get('slug') == slug:
+            return channel
+    return None
+
 def getAllPages():
     sitePages = models.getPages(keyname='sites')
     chartsPages = models.getPages(keyname='chartses')

@@ -57,34 +57,27 @@ class WordsAddResponse(webapp2.RequestHandler):
         networkutil.updateUuids(uuid)
 
         eventCriterion = globalconfig.getEventCriterion()
-        sitePages = snapi.getSitePages()
-        chartsPages = snapi.getChartsPages()
 
-        siteWords = data.get('sites')
-        if siteWords:
-            _saveWords('sites', siteWords, sitePages)
-            heapi.summarizeEvents(eventCriterion, 'sites', siteWords, sitePages)
-
-        chartsWords = data.get('chartses')
-        if chartsWords:
-            _saveWords('chartses', chartsWords, chartsPages)
-            heapi.summarizeEvents(eventCriterion, 'chartses', chartsWords, chartsPages)
-
-        channelsWords = data.get('channels', {})
-        channels = snapi.getChannels()
-        for channel in channels:
-            slug = channel.get('slug')
-            if not slug:
-                continue
-            tags = channel.get('tags')
-            if not tags:
-                continue
-            channelPages = snapi.getPagesByTags(sitePages, tags)
-            if not channelPages:
-                continue
-            channelWords = channelsWords.get(slug)
-            if channelWords:
-                _saveWords(slug, channelWords, channelPages)
+        key = data['key']
+        if key == 'sites':
+            sitePages = snapi.getSitePages()
+            _saveWords('sites', data['words'], sitePages)
+            heapi.summarizeEvents(eventCriterion, 'sites', data['words'], sitePages)
+        elif key == 'chartses':
+            chartsPages = snapi.getChartsPages()
+            _saveWords('chartses', data['words'], chartsPages)
+            heapi.summarizeEvents(eventCriterion, 'chartses', data['words'], chartsPages)
+        else:
+            channel = snapi.getChannel(key)
+            if not channel:
+                logging.warn('Channel %s does not exist.' % (channel, ))
+            elif not channel.get('tags'):
+                logging.warn('Channel %s has no tags.' % (channel, ))
+            else:
+                sitePages = snapi.getSitePages()
+                channelPages = snapi.getPagesByTags(sitePages, channel.get('tags'))
+                if channelPages:
+                    _saveWords(key, data['words'], channelPages)
 
         self.response.out.write('Done.')
 
