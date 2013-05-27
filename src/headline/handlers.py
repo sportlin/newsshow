@@ -2,7 +2,7 @@ import logging
 
 import webapp2
 
-from commonutil import dateutil
+from commonutil import dateutil, stringutil
 from templateutil.handlers import BasicHandler
 from searcher import gnews
 from robotkeyword import rkapi
@@ -129,7 +129,7 @@ class Search(MyHandler):
             words = list(jieba.cut(keyword, cut_all=False))
             words = [ word for word in words if len(word) > 1 ]
             # words = list(jieba.cut_for_search(keyword))
-            keyword = keyword.decode('utf8')
+            keyword = stringutil.parseUnicode(keyword)
             pages = snapi.getAllPages()
             pages = globalutil.search(pages, words)
             globalutil.populateSourceUrl(pages)
