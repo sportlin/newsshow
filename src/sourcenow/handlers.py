@@ -7,26 +7,31 @@ import globalutil
 
 from headline.handlers import MyHandler
 from hotword import hwapi
-from sourcenow import bs, snapi
+from . import bs, snapi
 
 class Channel(MyHandler):
 
     def get(self, channel):
-        channel = bs.getChannel(channel)
-        if not channel:
+        foundChannel = globalconfig.getChannel(channel)
+
+        if not foundChannel:
             self.error(404)
             return
 
-        globalutil.populateSourceUrl(channel['pages'])
-        channel['pages'].sort(key=lambda page: page['added'], reverse=True)
+        sitePages = snapi.getSitePages()
+        tags = foundChannel.get('tags')
+        foundChannel['pages'] = bs.getPagesByTags(sitePages, tags)
 
-        words, pages = hwapi.getWords(channel['slug'])
+        globalutil.populateSourceUrl(foundChannel['pages'])
+        foundChannel['pages'].sort(key=lambda page: page['added'], reverse=True)
+
+        words, pages = hwapi.getWords(foundChannel['slug'])
         pages.sort(key=lambda page: page['weight'], reverse=True)
 
         templateValues = {
             'words': words,
             'pages': pages,
-            'channel': channel,
+            'channel': foundChannel,
         }
         self.render(templateValues, 'channel.html')
 

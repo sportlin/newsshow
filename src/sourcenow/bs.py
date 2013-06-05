@@ -22,23 +22,6 @@ def getPagesByTags(pages, tags, returnMatched=True):
             result.append(page)
     return result
 
-def getChannel(slug):
-    foundChannel = None
-    for channel in models.getChannels():
-        if channel.get('slug') == slug:
-            foundChannel = channel
-            break
-    if not foundChannel:
-        return None
-
-    pages = sitePages = models.getPages(keyname='sites')
-
-    tags = foundChannel.get('tags')
-    pages = getPagesByTags(pages, tags)
-    foundChannel['pages'] = pages
-
-    return foundChannel
-
 def getCharts(slug):
     chartses = models.getDatasources('chartses')
     for charts in chartses:

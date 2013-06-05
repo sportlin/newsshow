@@ -14,7 +14,7 @@ from hotword import hwapi
 from hotevent import heapi
 
 def _getMenus():
-    channels = snapi.getChannels()
+    channels = globalconfig.getChannels()
     menus = []
     for channel in channels:
         slug = channel.get('slug')

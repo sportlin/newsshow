@@ -68,7 +68,7 @@ class WordsAddResponse(webapp2.RequestHandler):
             _saveWords('chartses', data['words'], chartsPages)
             heapi.summarizeEvents(eventCriterion, 'chartses', data['words'], chartsPages)
         else:
-            channel = snapi.getChannel(key)
+            channel = globalconfig.getChannel(key)
             if not channel:
                 logging.warn('Channel %s does not exist.' % (channel, ))
             elif not channel.get('tags'):

@@ -55,9 +55,6 @@ def _saveDatasource(datasource, items, keyname):
 def cleanData():
     pass
 
-def getChannels():
-    return cmapi.getItemValue('channels', [])
-
 def getDatasources(keyname=None):
     if not keyname:
         keyname = 'sites'

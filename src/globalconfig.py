@@ -9,6 +9,16 @@ def getI18N():
     return cmapi.getItemValue('i18n',
         {'home': 'Home'})
 
+def getChannels():
+    return cmapi.getItemValue('channels', [])
+
+def getChannel(slug):
+    channels = getChannels()
+    for channel in channels:
+        if channel.get('slug') == slug:
+            return channel
+    return None
+
 def getSiteLatestHours():
     site = cmapi.getItemValue('site', {})
     hours = site.get('latest.hours', 24)
