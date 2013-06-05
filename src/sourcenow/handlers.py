@@ -73,11 +73,22 @@ class Sites(MyHandler):
 class Latest(MyHandler):
 
     def get(self, scope=None):
+        pageTitle = None
         if scope == 'sites':
             pages = snapi.getSitePages()
             globalutil.populateSourceUrl(pages)
+            pageTitle = self.i18n.get('headlineSites')
         elif scope == 'chartses':
             pages = snapi.getChartsPages()
+            pageTitle = self.i18n.get('headlineChartses')
+        elif scope:
+            homeTag = globalconfig.getHomeTag(scope)
+            if not homeTag:
+                self.error(404)
+                return
+            pages = snapi.getPagesByTags(snapi.getSitePages(), homeTag['tags'])
+            globalutil.populateSourceUrl(pages)
+            pageTitle = homeTag['name']
         else:
             sitePages = snapi.getSitePages()
             globalutil.populateSourceUrl(sitePages)
@@ -86,7 +97,7 @@ class Latest(MyHandler):
         pages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         templateValues = {
             'latesturl': webapp2.uri_for('latest'),
-            'scope': scope,
+            'pageTitle': pageTitle,
             'pages': pages,
         }
         self.render(templateValues, 'latest.html')

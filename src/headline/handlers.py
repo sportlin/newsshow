@@ -66,7 +66,17 @@ class Home(MyHandler):
 
     def get(self):
         _LATEST_COUNT = 6
+
         sitePages = snapi.getSitePages()
+
+        homeTags = globalconfig.getHomeTags()
+        for homeTag in homeTags:
+            homeTag['pages'] = snapi.getPagesByTags(sitePages, homeTag['tags'])
+            homeTag['pages'].sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+            homeTag['pages'] = homeTag['pages'][:_LATEST_COUNT]
+            globalutil.populateSourceUrl(homeTag['pages'])
+            homeTag['url'] = webapp2.uri_for('latestScope', scope=homeTag['slug'])
+
         sitePages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         sitePages = sitePages[:_LATEST_COUNT]
         globalutil.populateSourceUrl(sitePages)
@@ -104,16 +114,20 @@ class Home(MyHandler):
             charts['pages'] = charts['pages'][:_LATEST_COUNT]
 
         templateValues = {
+            'homeTags': homeTags,
             'sitePages': sitePages,
             'chartsPages': chartsPages,
+
             'siteEvents': siteEvents,
             'chartsEvents': chartsEvents,
             'chartses': chartses,
+
             'latesturl': webapp2.uri_for('latest'),
             'latestsitesurl': webapp2.uri_for('latestScope', scope='sites'),
             'latestchartsesurl': webapp2.uri_for('latestScope', scope='chartses'),
+
             'hotsitesurl': webapp2.uri_for('sites'),
-            'hotchartsesurl': webapp2.uri_for('chartses')
+            'hotchartsesurl': webapp2.uri_for('chartses'),
         }
         self.render(templateValues, 'home.html')
 

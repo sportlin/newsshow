@@ -19,6 +19,16 @@ def getChannel(slug):
             return channel
     return None
 
+def getHomeTags():
+    return cmapi.getItemValue('home.tags', [])
+
+def getHomeTag(slug):
+    homeTags = getHomeTags()
+    for homeTag in homeTags:
+        if homeTag.get('slug') == slug:
+            return homeTag
+    return None
+
 def getSiteLatestHours():
     site = cmapi.getItemValue('site', {})
     hours = site.get('latest.hours', 24)
