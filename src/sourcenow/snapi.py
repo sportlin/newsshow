@@ -33,3 +33,6 @@ def getChartsPages():
 def getPagesByTags(pages, tags):
     return bs.getPagesByTags(pages, tags)
 
+def getChartses():
+    return bs.getChartses()
+

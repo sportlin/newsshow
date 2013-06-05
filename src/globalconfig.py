@@ -1,6 +1,4 @@
 
-import os
-
 from configmanager import cmapi
 
 def getSiteConfig():

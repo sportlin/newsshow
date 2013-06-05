@@ -4,7 +4,7 @@ import webapp2
 
 from commonutil import dateutil, stringutil
 from templateutil.handlers import BasicHandler
-from searcher import gnews
+from searchengine import gnews
 from robotkeyword import rkapi
 
 import globalconfig
@@ -60,15 +60,12 @@ class MyHandler(BasicHandler):
 
     def prepareValues(self):
         self.extraValues['extramenus'] = _getMenus()
-        self.extraValues['latesturl'] = webapp2.uri_for('latest')
-        self.extraValues['sitesurl'] = webapp2.uri_for('sites')
-        self.extraValues['chartsesurl'] = webapp2.uri_for('chartses')
 
 
 class Home(MyHandler):
 
     def get(self):
-        _LATEST_COUNT = 20
+        _LATEST_COUNT = 6
         sitePages = snapi.getSitePages()
         sitePages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         sitePages = sitePages[:_LATEST_COUNT]
@@ -78,40 +75,45 @@ class Home(MyHandler):
         chartsPages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         chartsPages = chartsPages[:_LATEST_COUNT]
 
-        latestPages = sitePages + chartsPages
-        latestPages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
-        latestPages = latestPages[:_LATEST_COUNT]
-
-        sentenceSeparators = self.site.get('sentence.separator', [])
-
-        siteWords, _ = hwapi.getWords('sites')
-        sitePages = heapi.getEventPages('sites')
-        for page in sitePages:
+        siteEvents = heapi.getEventPages('sites')
+        for page in siteEvents:
             if page['event']['exposed']:
                 eventUrlType = 'event'
             else:
                 eventUrlType = 'hidden-event'
             # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
             page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='sites', eventId=page['event']['id'])
-        sitePages.sort(key=lambda page: page['weight'], reverse=True)
-        globalutil.populateSourceUrl(sitePages)
+        siteEvents.sort(key=lambda page: page['weight'], reverse=True)
+        siteEvents = siteEvents[:_LATEST_COUNT]
+        globalutil.populateSourceUrl(siteEvents)
 
-        chartsWords, _ = hwapi.getWords('chartses')
-        chartsPages = heapi.getEventPages('chartses')
-        for page in chartsPages:
+        chartsEvents = heapi.getEventPages('chartses')
+        for page in chartsEvents:
             if page['event']['exposed']:
                 eventUrlType = 'event'
             else:
                 eventUrlType = 'hidden-event'
             page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='chartses', eventId=page['event']['id'])
-        chartsPages.sort(key=lambda page: page['weight'], reverse=True)
+        chartsEvents.sort(key=lambda page: page['weight'], reverse=True)
+        chartsEvents = chartsEvents[:_LATEST_COUNT]
+
+        chartses = snapi.getChartses()
+        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
+        for charts in chartses:
+            charts['url'] = webapp2.uri_for('charts', charts=charts['source']['slug'])
+            charts['pages'] = charts['pages'][:_LATEST_COUNT]
 
         templateValues = {
-            'latestPages': latestPages,
-            'siteWords': siteWords,
             'sitePages': sitePages,
-            'chartsWords': chartsWords,
             'chartsPages': chartsPages,
+            'siteEvents': siteEvents,
+            'chartsEvents': chartsEvents,
+            'chartses': chartses,
+            'latesturl': webapp2.uri_for('latest'),
+            'latestsitesurl': webapp2.uri_for('latestScope', scope='sites'),
+            'latestchartsesurl': webapp2.uri_for('latestScope', scope='chartses'),
+            'hotsitesurl': webapp2.uri_for('sites'),
+            'hotchartsesurl': webapp2.uri_for('chartses')
         }
         self.render(templateValues, 'home.html')
 

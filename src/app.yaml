@@ -15,7 +15,7 @@ handlers:
 - url: /sitemap.xml
   static_files: html/site/sitemap.xml
   upload: html/site/sitemap.xml
-- url: /media/9
+- url: /media/10
   static_dir: html/media
 - url: /admin/config/.*
   script: library.configmanager.main.app

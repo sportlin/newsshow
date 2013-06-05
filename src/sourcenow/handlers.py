@@ -33,18 +33,11 @@ class Channel(MyHandler):
 class Chartses(MyHandler):
 
     def get(self):
-        PAGE_COUNT = 10
         words, pages = hwapi.getWords('chartses')
         pages.sort(key=lambda page: page['weight'], reverse=True)
-        chartses = bs.getChartses()
-        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
-        for charts in chartses:
-            charts['url'] = webapp2.uri_for('charts', charts=charts['source']['slug'])
-            charts['pages'] = charts['pages'][:PAGE_COUNT]
         templateValues = {
             'words': words,
             'pages': pages,
-            'chartses': chartses,
         }
         self.render(templateValues, 'chartses.html')
 
@@ -74,13 +67,21 @@ class Sites(MyHandler):
 
 class Latest(MyHandler):
 
-    def get(self):
-        sitePages = snapi.getSitePages()
-        globalutil.populateSourceUrl(sitePages)
-        chartsPages = snapi.getChartsPages()
-        pages = sitePages + chartsPages
+    def get(self, scope=None):
+        if scope == 'sites':
+            pages = snapi.getSitePages()
+            globalutil.populateSourceUrl(pages)
+        elif scope == 'chartses':
+            pages = snapi.getChartsPages()
+        else:
+            sitePages = snapi.getSitePages()
+            globalutil.populateSourceUrl(sitePages)
+            chartsPages = snapi.getChartsPages()
+            pages = sitePages + chartsPages
         pages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         templateValues = {
+            'latesturl': webapp2.uri_for('latest'),
+            'scope': scope,
             'pages': pages,
         }
         self.render(templateValues, 'latest.html')
