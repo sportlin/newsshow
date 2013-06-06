@@ -31,7 +31,7 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
 
         events['items'].append(matchedEvent)
     if not matchedEvent.get('exposed'):
-        matchedEvent['exposed'] = word['weight'] >= exposePages
+        matchedEvent['exposed'] = word['size'] >= exposePages
     matchedEvent['updated'] = nnow
     for keyword in reversed(word['keywords']):
         if keyword in matchedEvent['keywords']:
@@ -41,7 +41,7 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
 
     return matchedEvent
 
-def _saveEventItem(scope, eventId, word, nnow, pages):
+def _saveEventItem(scope, eventId, word, nnow, matcheds):
     eventItem = models.getEvent(scope, eventId)
     if not eventItem:
         eventItem = {
@@ -51,7 +51,6 @@ def _saveEventItem(scope, eventId, word, nnow, pages):
             }
     eventItem['updated'] = nnow
 
-    matcheds = globalutil.search(pages, word['keywords'])
     eventPages = eventItem.get('pages', [])
     changed = False
     for matched in matcheds:
@@ -108,19 +107,21 @@ def summarizeEvents(eventCriterion, scope, words, pages):
     _archiveEvents(scope, events)
 
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
-    # Identify less important words first,
-    # so if multiple words map to the same event, the latter one win.
-    words.sort(key=lambda word: word['weight'])
 
-    for word in words:
-        if 'page' not in word:
+    for keywords in reversed(words):
+        matcheds = globalutil.search(pages, keywords)
+        if not matcheds:
             continue
+        word = {}
+        word['keywords'] = keywords
+        word['size'] = len(matcheds)
+        word['page'] = matcheds[0]
         event = _summarizeEvent(exposePages, scope, events, word, nnow)
         if event:
-            _saveEventItem(scope, event['id'], word, nnow, pages)
+            _saveEventItem(scope, event['id'], word, nnow, matcheds)
 
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
-    events['items'].sort(key=lambda item: item['word']['weight'], reverse=True)
+    events['items'].sort(key=lambda item: item['word']['size'], reverse=True)
     events['updated'] = nnow
     models.saveEvents(scope, events)
 
@@ -139,10 +140,10 @@ def getEventPages(scope):
         urls.add(url)
         event['word']['page']['event'] = {
                 'id': event['id'],
-                'keyword': ', '.join(event['word']['keywords']),
+                'keyword': ', '.join(event['word']['keywords'][:3]),
                 'exposed': event['exposed'],
             }
-        event['word']['page']['weight'] = event['word']['weight']
+        event['word']['page']['weight'] = event['word']['size']
         result.append(event['word']['page'])
         count += 1
     return result

@@ -32,17 +32,15 @@ class WordsAddRequest(webapp2.RequestHandler):
 
 def _saveWords(keyname, words, pages):
     matchedWords = []
-    for word in words:
-        keywords = []
-        keywords.append(word['name'])
-        if word.get('children', []):
-            keywords.append(word['children'][0]['name'])
+    for keywords in words:
+        word = {}
         word['keywords'] = keywords
 
         matched = globalutil.search(pages, keywords)
         if matched:
             wordPage = matched[0]
             word['page'] = wordPage
+            word['size'] = len(matched)
             matchedWords.append(word)
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     data = {
