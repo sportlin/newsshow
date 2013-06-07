@@ -45,3 +45,6 @@ def getEventCriterion():
         result['expose.pages'] = 5
     return result
 
+def getTwitterAccount():
+    return cmapi.getItemValue('twitter.account', {})
+

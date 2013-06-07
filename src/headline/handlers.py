@@ -4,7 +4,6 @@ import webapp2
 
 from commonutil import dateutil, stringutil
 from templateutil.handlers import BasicHandler
-from searchengine import gnews
 from robotkeyword import rkapi
 
 import globalconfig
@@ -12,6 +11,7 @@ import globalutil
 from sourcenow import snapi
 from hotword import hwapi
 from hotevent import heapi
+from . import bs
 
 def _getMenus():
     channels = globalconfig.getChannels()
@@ -136,9 +136,8 @@ class Search(MyHandler):
 
     def get(self, keyword):
         pages = []
-        gpages = []
+        spages = []
         words = []
-        gnewssize = 2
         if keyword:
             import jieba # May fail to load jieba
             jieba.initialize(usingSmall=True)
@@ -150,23 +149,13 @@ class Search(MyHandler):
             pages = globalutil.search(pages, words)
             globalutil.populateSourceUrl(pages)
 
-            gpages = gnews.search(keyword, large=True)
-            if not gpages:
-                for word in words:
-                    gpages = gnews.search(word, large=True)
-                    if gpages:
-                        break
-            gpages.sort(key=lambda page: page.get('published'), reverse=True)
-            gpages.sort(key=lambda page: bool(page.get('img')), reverse=True)
-            gpages = gpages[:gnewssize]
-
-        gnewsUrl = gnews.getSearchUrl(keyword)
+            twitterAccount = globalconfig.getTwitterAccount()
+            spages = bs.search(words[0], twitterAccount)
 
         templateValues = {
             'keyword': keyword,
             'pages': pages,
-            'gpages': gpages,
-            'gnewsurl': gnewsUrl,
+            'spages': spages,
             'words': words,
         }
         self.render(templateValues, 'search.html')
