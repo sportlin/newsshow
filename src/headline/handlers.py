@@ -118,6 +118,7 @@ class Home(MyHandler):
             'sitePages': sitePages,
             'chartsPages': chartsPages,
 
+            'hoturl': webapp2.uri_for('hot'),
             'siteEvents': siteEvents,
             'chartsEvents': chartsEvents,
             'chartses': chartses,

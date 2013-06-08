@@ -1,7 +1,12 @@
+import webapp2
+
 from commonutil import stringutil
 
+import globalutil
 from headline.handlers import MyHandler
 from . import models
+from . import heapi
+
 
 class Event(MyHandler):
 
@@ -28,4 +33,26 @@ class Event(MyHandler):
             'event': event,
         }
         self.render(templateValues, 'event.html')
+
+
+class Events(MyHandler):
+
+    def get(self):
+        siteEvents = heapi.getEventPages('sites')
+        siteEvents = [ page for page in siteEvents if page['event']['exposed'] ]
+        for page in siteEvents:
+            page['event']['url'] = webapp2.uri_for('event', eventScope='sites', eventId=page['event']['id'])
+        siteEvents.sort(key=lambda page: page['weight'], reverse=True)
+        globalutil.populateSourceUrl(siteEvents)
+
+        chartsEvents = heapi.getEventPages('chartses')
+        chartsEvents = [ page for page in chartsEvents if page['event']['exposed'] ]
+        for page in chartsEvents:
+            page['event']['url'] = webapp2.uri_for('event', eventScope='chartses', eventId=page['event']['id'])
+        chartsEvents.sort(key=lambda page: page['weight'], reverse=True)
+        templateValues = {
+            'siteEvents': siteEvents,
+            'chartsEvents': chartsEvents,
+        }
+        self.render(templateValues, 'hot.html')
 

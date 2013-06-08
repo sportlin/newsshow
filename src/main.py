@@ -49,6 +49,8 @@ webapp2.Route('/source/<source:.+>', handler=sourcehistory.handlers.DatasourceHi
 ('/words/show/', hotword.handlers.Show),
 ('/api/words/add/', hotword.handlersapi.WordsAddRequest),
 ('/words/add/', hotword.handlersapi.WordsAddResponse),
+
+webapp2.Route('/hot/', handler=hotevent.handlers.Events, name='hot'),
 webapp2.Route('/event/<eventScope:[^/]+>/<eventId:[^/]+>/', handler=hotevent.handlers.Event, name='event'),
 webapp2.Route('/hidden/event/<eventScope:[^/]+>/<eventId:[^/]+>/', handler=hotevent.handlers.Event, name='hidden-event'),
 ],
