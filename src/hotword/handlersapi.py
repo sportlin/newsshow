@@ -55,16 +55,17 @@ class WordsAddResponse(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         data = json.loads(self.request.body)
         eventCriterion = globalconfig.getEventCriterion()
+        twitterAccount = globalconfig.getTwitterAccount()
 
         key = data['key']
         if key == 'sites':
             sitePages = snapi.getSitePages()
             _saveWords('sites', data['words'], sitePages)
-            heapi.summarizeEvents(eventCriterion, 'sites', data['words'], sitePages)
+            heapi.summarizeEvents(eventCriterion, 'sites', data['words'], sitePages, twitterAccount)
         elif key == 'chartses':
             chartsPages = snapi.getChartsPages()
             _saveWords('chartses', data['words'], chartsPages)
-            heapi.summarizeEvents(eventCriterion, 'chartses', data['words'], chartsPages)
+            heapi.summarizeEvents(eventCriterion, 'chartses', data['words'], chartsPages, twitterAccount)
         else:
             channel = globalconfig.getChannel(key)
             if not channel:

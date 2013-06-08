@@ -1,6 +1,8 @@
 import datetime
 
-from commonutil import dateutil
+from commonutil import dateutil, stringutil
+from searchengine import gnews, twitter
+
 import globalutil
 from . import models
 
@@ -41,17 +43,7 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
 
     return matchedEvent
 
-def _saveEventItem(scope, eventId, word, nnow, matcheds):
-    eventItem = models.getEvent(scope, eventId)
-    if not eventItem:
-        eventItem = {
-                'id': eventId,
-                'keywords': [],
-                'added': nnow,
-            }
-    eventItem['updated'] = nnow
-
-    eventPages = eventItem.get('pages', [])
+def _addMatcheds(eventPages, word, matcheds):
     changed = False
     for matched in matcheds:
         found = False
@@ -63,6 +55,44 @@ def _saveEventItem(scope, eventId, word, nnow, matcheds):
             matched['keywords'] = word['keywords']
             eventPages.append(matched)
             changed = True
+    return changed
+
+def _addTwitterPage(eventPages, word, twitterAccount):
+    if not twitterAccount:
+        return
+    keyword = ' '.join(word['keywords'][:2])
+    tpages = twitter.search(keyword, twitterAccount)
+    if not tpages:
+        return False
+    tpage = tpages[0]
+    tpage['hash'] = stringutil.calculateHash([tpage['content']])
+    existed = False
+    for page in eventPages:
+        if page.get('hash') == tpage['hash']:
+            existed = True
+            break
+    if not existed:
+        eventPages.append(tpage)
+        return True
+    return False
+
+def _saveEventItem(scope, eventId, word, nnow, matcheds, twitterAccount):
+    eventItem = models.getEvent(scope, eventId)
+    if not eventItem:
+        eventItem = {
+                'id': eventId,
+                'keywords': [],
+                'added': nnow,
+            }
+    eventItem['updated'] = nnow
+
+    eventPages = eventItem.get('pages', [])
+    changed = False
+    if _addMatcheds(eventPages, word, matcheds):
+        changed = True
+    if _addTwitterPage(eventPages, word, twitterAccount):
+        changed = True
+
     eventItem['pages'] = eventPages
 
     for keyword in reversed(word['keywords']):
@@ -95,7 +125,7 @@ def _archiveEvents(scope, events):
     if changed:
         models.saveHistoryEvents(scope, historEvents)
 
-def summarizeEvents(eventCriterion, scope, words, pages):
+def summarizeEvents(eventCriterion, scope, words, pages, twitterAccount):
     exposePages = eventCriterion['expose.pages']
     events = models.getEvents(scope)
     if not events:
@@ -118,7 +148,7 @@ def summarizeEvents(eventCriterion, scope, words, pages):
         word['page'] = matcheds[0]
         event = _summarizeEvent(exposePages, scope, events, word, nnow)
         if event:
-            _saveEventItem(scope, event['id'], word, nnow, matcheds)
+            _saveEventItem(scope, event['id'], word, nnow, matcheds, twitterAccount)
 
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
     events['items'].sort(key=lambda item: item['word']['size'], reverse=True)
