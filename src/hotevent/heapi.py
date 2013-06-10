@@ -6,21 +6,35 @@ from searchengine import gnews, twitter
 import globalutil
 from . import models
 
-def _isListIntersection(list1, list2):
-    for item in list1:
-        if item in list2:
+def _isKeywordsGroupMatched(keywordsSet, keywordsGroup):
+    matchedSize = 2
+    for item in keywordsGroup:
+        if len(set(item).intersection(keywordsSet)) >= matchedSize:
             return True
     return False
+
+def updateKeywordsGroup(keywords, keywordsGroup):
+    found = False
+    keywordsSet = set(keywords)
+
+    for item in keywordsGroup:
+        if len(item) != len(keywords):
+            continue
+        if len(set(item).difference(keywordsSet)) == 0:
+            found = True
+            break
+    if not found:
+        keywordsGroup.insert(0, keywords)
 
 def _summarizeEvent(exposePages, scope, events, word, nnow):
     createMinSize = 2
     if len(word['keywords']) < createMinSize:
         return None
+    keywordsSet = set(word['keywords'])
 
     matchedEvent = None
-    latestKeywordsCount = 10
     for event in events['items']:
-        if _isListIntersection(word['keywords'], event['keywords'][:latestKeywordsCount]):
+        if _isKeywordsGroupMatched(word['keywords'], event['keywordsgroup']):
             matchedEvent = event
             break
 
@@ -29,16 +43,15 @@ def _summarizeEvent(exposePages, scope, events, word, nnow):
         matchedEvent = {}
         matchedEvent['id'] = events['counter']
         matchedEvent['added'] = nnow
-        matchedEvent['keywords'] = []
+        matchedEvent['keywordsgroup'] = []
 
         events['items'].append(matchedEvent)
     if not matchedEvent.get('exposed'):
         matchedEvent['exposed'] = word['size'] >= exposePages
     matchedEvent['updated'] = nnow
-    for keyword in reversed(word['keywords']):
-        if keyword in matchedEvent['keywords']:
-            matchedEvent['keywords'].remove(keyword)
-        matchedEvent['keywords'].insert(0, keyword)
+
+    updateKeywordsGroup(word['keywords'], matchedEvent['keywordsgroup'])
+
     matchedEvent['word'] = word
 
     return matchedEvent
