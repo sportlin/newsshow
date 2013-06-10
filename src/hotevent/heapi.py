@@ -151,16 +151,10 @@ def summarizeEvents(eventCriterion, scope, words, pages, twitterAccount):
 
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
 
-    for keywords in reversed(words):
-        matcheds = globalutil.search(pages, keywords)
-        if not matcheds:
-            continue
-        word = {}
-        word['keywords'] = keywords
-        word['size'] = len(matcheds)
-        word['page'] = matcheds[0]
+    for word in reversed(words):
         event = _summarizeEvent(exposePages, scope, events, word, nnow)
         if event:
+            matcheds = globalutil.search(pages, word['keywords'])
             _saveEventItem(scope, event['id'], word, nnow, matcheds, twitterAccount)
 
     events['items'].sort(key=lambda item: item['updated'], reverse=True)
@@ -183,7 +177,7 @@ def getEventPages(scope):
         urls.add(url)
         event['word']['page']['event'] = {
                 'id': event['id'],
-                'keyword': ', '.join(event['word']['keywords'][:3]),
+                'keyword': ', '.join(event['word'].get('readablekeywords', [])),
                 'exposed': event['exposed'],
             }
         event['word']['page']['weight'] = event['word']['size']

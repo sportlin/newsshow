@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import math
 
 from google.appengine.api import taskqueue
 
@@ -30,6 +31,31 @@ class WordsAddRequest(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.out.write('Request is accepted.')
 
+def _getNaturalKeywords(keywords, pages):
+    scoreCache = {}
+    for keyword in keywords:
+        scoreCache[keyword] = 0
+
+    for page in pages:
+        title = page.get('title')
+        if not title:
+            continue
+        matchedCount = 0
+        matched = []
+        for keyword in keywords:
+            index = title.find(keyword)
+            matched.append(index)
+            if index >= 0:
+                matchedCount += 1
+        # the keyword near the start of title has more weight.
+        smatched = sorted(matched, reverse=True)
+        for i in range(len(matched)):
+            matched[i] = smatched.index(matched[i])
+
+        for i in range(len(keywords)):
+            scoreCache[keywords[i]] += matched[i] * math.pow(10, matchedCount)
+    return sorted(keywords, key=lambda keyword: scoreCache[keyword], reverse=True)
+
 def _saveWords(keyname, words, pages):
     matchedWords = []
     for keywords in words:
@@ -41,6 +67,7 @@ def _saveWords(keyname, words, pages):
             wordPage = matched[0]
             word['page'] = wordPage
             word['size'] = len(matched)
+            word['readablekeywords'] = _getNaturalKeywords(keywords, matched)
             matchedWords.append(word)
     nnow = dateutil.getDateAs14(datetime.datetime.utcnow())
     data = {
@@ -48,6 +75,7 @@ def _saveWords(keyname, words, pages):
             'words': matchedWords,
         }
     models.saveWords(keyname, data)
+    return matchedWords
 
 class WordsAddResponse(webapp2.RequestHandler):
 
@@ -60,12 +88,12 @@ class WordsAddResponse(webapp2.RequestHandler):
         key = data['key']
         if key == 'sites':
             sitePages = snapi.getSitePages()
-            _saveWords('sites', data['words'], sitePages)
-            heapi.summarizeEvents(eventCriterion, 'sites', data['words'], sitePages, twitterAccount)
+            matchedWords = _saveWords('sites', data['words'], sitePages)
+            heapi.summarizeEvents(eventCriterion, 'sites', matchedWords, sitePages, twitterAccount)
         elif key == 'chartses':
             chartsPages = snapi.getChartsPages()
-            _saveWords('chartses', data['words'], chartsPages)
-            heapi.summarizeEvents(eventCriterion, 'chartses', data['words'], chartsPages, twitterAccount)
+            matchedWords = _saveWords('chartses', data['words'], chartsPages)
+            heapi.summarizeEvents(eventCriterion, 'chartses', matchedWords, chartsPages, twitterAccount)
         else:
             channel = globalconfig.getChannel(key)
             if not channel:

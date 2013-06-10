@@ -11,10 +11,10 @@ def getWords(wordsName):
             continue
         urls.add(url)
         allWords.append({
-            'keywords': word['keywords'][:3],
+            'keywords': word['readablekeywords'][:3],
             'weight': word['size'],
             })
-        word['page']['keywords'] = word['keywords']
+        word['page']['keywords'] = word['readablekeywords']
         word['page']['weight'] = word['size']
         pages.append(word['page'])
 
