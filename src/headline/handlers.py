@@ -161,3 +161,35 @@ class Search(MyHandler):
         }
         self.render(templateValues, 'search.html')
 
+
+class Hot(MyHandler):
+
+    def get(self):
+        siteEvents = heapi.getEventPages('sites')
+        siteEvents = [ page for page in siteEvents if page['event']['exposed'] ]
+        for page in siteEvents:
+            page['event']['url'] = webapp2.uri_for('event', eventScope='sites', eventId=page['event']['id'])
+        siteEvents.sort(key=lambda page: page['weight'], reverse=True)
+        globalutil.populateSourceUrl(siteEvents)
+
+        chartsEvents = heapi.getEventPages('chartses')
+        chartsEvents = [ page for page in chartsEvents if page['event']['exposed'] ]
+        for page in chartsEvents:
+            page['event']['url'] = webapp2.uri_for('event', eventScope='chartses', eventId=page['event']['id'])
+        chartsEvents.sort(key=lambda page: page['weight'], reverse=True)
+
+        _LATEST_COUNT = 10
+        chartses = snapi.getChartses()
+        chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
+        for charts in chartses:
+            charts['url'] = webapp2.uri_for('charts', charts=charts['source']['slug'])
+            charts['pages'] = charts['pages'][:_LATEST_COUNT]
+
+
+        templateValues = {
+            'siteEvents': siteEvents,
+            'chartsEvents': chartsEvents,
+            'chartses': chartses,
+        }
+        self.render(templateValues, 'hot.html')
+
