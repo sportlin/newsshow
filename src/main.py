@@ -1,6 +1,7 @@
 import webapp2
 import os
 import sys
+import urllib
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'library'))
 
@@ -18,6 +19,12 @@ import hotevent.handlers
 
 import globalconfig
 
+
+def imageproxy(imageurl, server):
+    if not server:
+        return imageurl
+    return server + '/image/?url=' + urllib.quote(imageurl.encode('utf-8'))
+
 config = {}
 config['webapp2_extras.jinja2'] = {
     'template_path': os.path.join(os.path.dirname(__file__), 'html', 'templates'),
@@ -25,6 +32,7 @@ config['webapp2_extras.jinja2'] = {
         'utc14duration': templateutil.filters.utc14duration,
         'd14format': templateutil.filters.d14format,
         'tojson': templateutil.filters.tojson,
+        'imageproxy': imageproxy,
     },
     'environment_args': {
         'extensions': ['jinja2.ext.loopcontrols', 'jinja2.ext.with_'],
