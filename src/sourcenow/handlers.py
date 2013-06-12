@@ -1,6 +1,7 @@
 import webapp2
 
 from templateutil.handlers import BasicHandler
+from commonutil import dateutil, stringutil
 
 import globalconfig
 import globalutil
@@ -74,6 +75,7 @@ class Latest(MyHandler):
 
     def get(self, scope=None):
         pageTitle = None
+        showType = None
         if scope == 'sites':
             pages = snapi.getSitePages()
             globalutil.populateSourceUrl(pages)
@@ -94,11 +96,28 @@ class Latest(MyHandler):
             globalutil.populateSourceUrl(sitePages)
             chartsPages = snapi.getChartsPages()
             pages = sitePages + chartsPages
+
+            key = stringutil.transformSeparators('latest-show-type')
+            showType = self.request.cookies.get(key)
+            pageSince = None
+            if showType == 'today':
+                pageSince = dateutil.getTodayStartAs14(self.site.get('timezone', 0))
+            elif showType == 'unread':
+                key = stringutil.transformSeparators('latest-show-read')
+                pageSince = self.request.cookies.get(key)
+                latestHour = dateutil.getHoursAs14(1)
+                if not pageSince or pageSince > latestHour:
+                    pageSince = latestHour
+            if pageSince:
+                pages = [ page for page in pages if page.get('added') >= pageSince ]
+            key = stringutil.transformSeparators('latest-show-read')
+            self.response.set_cookie(key, dateutil.getDateAs14(), max_age=3600*24*7, path='/')
         pages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
         templateValues = {
             'latesturl': webapp2.uri_for('latest'),
             'pageTitle': pageTitle,
             'pages': pages,
+            'showType': showType,
         }
         self.render(templateValues, 'latest.html')
 
