@@ -39,6 +39,10 @@ config['webapp2_extras.jinja2'] = {
     },
 }
 
+config['webapp2_extras.sessions'] = {
+    'secret_key': 'dsdfsdfdsffds',
+}
+
 app = webapp2.WSGIApplication([
 ('/', headline.handlers.Home),
 webapp2.Route('/search/<keyword:.*>', handler=headline.handlers.Search, name='search'),
