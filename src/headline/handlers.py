@@ -14,20 +14,7 @@ from hotevent import heapi
 from . import bs
 
 def _getMenus():
-    channels = globalconfig.getChannels()
     menus = []
-    for channel in channels:
-        slug = channel.get('slug')
-        name = channel.get('name')
-        if not slug:
-            continue
-        if not name:
-            continue
-        url = webapp2.uri_for('channel', channel=slug)
-        menus.append({
-            'name': name,
-            'url': url,
-        })
     return menus
 
 class MyHandler(BasicHandler):
@@ -67,45 +54,22 @@ class Home(MyHandler):
     def get(self):
         _LATEST_COUNT = 6
 
-        sitePages = snapi.getSitePages()
-
-        homeTags = globalconfig.getHomeTags()
-        for homeTag in homeTags:
-            homeTag['pages'] = snapi.getPagesByTags(sitePages, homeTag['tags'])
-            homeTag['pages'].sort(key=lambda page: page.get('published') or page['added'], reverse=True)
-            homeTag['pages'] = homeTag['pages'][:_LATEST_COUNT]
-            globalutil.populateSourceUrl(homeTag['pages'])
-            homeTag['url'] = webapp2.uri_for('latestScope', scope=homeTag['slug'])
-
-        sitePages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
-        sitePages = sitePages[:_LATEST_COUNT]
-        globalutil.populateSourceUrl(sitePages)
-
-        chartsPages = snapi.getChartsPages()
-        chartsPages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
-        chartsPages = chartsPages[:_LATEST_COUNT]
-
-        siteEvents = heapi.getEventPages('sites')
-        for page in siteEvents:
-            if page['event']['exposed']:
-                eventUrlType = 'event'
-            else:
-                eventUrlType = 'hidden-event'
-            # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
-            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='sites', eventId=page['event']['id'])
-        siteEvents.sort(key=lambda page: page['weight'], reverse=True)
-        siteEvents = siteEvents[:_LATEST_COUNT]
-        globalutil.populateSourceUrl(siteEvents)
-
-        chartsEvents = heapi.getEventPages('chartses')
-        for page in chartsEvents:
-            if page['event']['exposed']:
-                eventUrlType = 'event'
-            else:
-                eventUrlType = 'hidden-event'
-            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='chartses', eventId=page['event']['id'])
-        chartsEvents.sort(key=lambda page: page['weight'], reverse=True)
-        chartsEvents = chartsEvents[:_LATEST_COUNT]
+        channels = globalconfig.getChannels()
+        for channel in channels:
+            slug = channel.get('slug')
+            events = heapi.getEventPages(slug)
+            channel['url'] = webapp2.uri_for('channel', channel=slug)
+            for page in events:
+                if page['event']['exposed']:
+                    eventUrlType = 'event'
+                else:
+                    eventUrlType = 'hidden-event'
+                # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
+                page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope=slug, eventId=page['event']['id'])
+            events.sort(key=lambda page: page['weight'], reverse=True)
+            events = events[:_LATEST_COUNT]
+            globalutil.populateSourceUrl(events)
+            channel['events'] = events
 
         chartses = snapi.getChartses()
         chartses.sort(key=lambda charts: charts['source']['added'], reverse=True)
@@ -114,21 +78,8 @@ class Home(MyHandler):
             charts['pages'] = charts['pages'][:_LATEST_COUNT]
 
         templateValues = {
-            'homeTags': homeTags,
-            'sitePages': sitePages,
-            'chartsPages': chartsPages,
-
-            'hoturl': webapp2.uri_for('hot'),
-            'siteEvents': siteEvents,
-            'chartsEvents': chartsEvents,
+            'channels': channels,
             'chartses': chartses,
-
-            'latesturl': webapp2.uri_for('latest'),
-            'latestsitesurl': webapp2.uri_for('latestScope', scope='sites'),
-            'latestchartsesurl': webapp2.uri_for('latestScope', scope='chartses'),
-
-            'hotsitesurl': webapp2.uri_for('sites'),
-            'hotchartsesurl': webapp2.uri_for('chartses'),
         }
         self.render(templateValues, 'home.html')
 

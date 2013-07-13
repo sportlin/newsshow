@@ -1,6 +1,6 @@
 
 from commonutil import dateutil, stringutil
-from searchengine import gnews, twitter
+from searchengine import gnews, twitter, google
 
 import globalutil
 
@@ -15,6 +15,10 @@ def search(keyword, twitterAccount):
     gpages.sort(key=lambda page: bool(page.get('img')), reverse=True)
     if gpages:
         pages.append(gpages[0])
+    else:
+        gpages = google.search(keyword)
+        if gpages:
+            pages.append(gpages[0])
     if twitterAccount:
         tpages = twitter.search(keyword, twitterAccount)
         if tpages:
