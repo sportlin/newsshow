@@ -73,51 +73,32 @@ class Sites(MyHandler):
 
 class Latest(MyHandler):
 
-    def get(self, scope=None):
-        pageTitle = None
-        showType = None
-        if scope == 'sites':
-            pages = snapi.getSitePages()
-            globalutil.populateSourceUrl(pages)
-            pageTitle = self.i18n.get('headlineSites')
-        elif scope == 'chartses':
-            pages = snapi.getChartsPages()
-            pageTitle = self.i18n.get('headlineChartses')
-        elif scope:
-            homeTag = globalconfig.getHomeTag(scope)
-            if not homeTag:
-                self.error(404)
-                return
-            pages = snapi.getPagesByTags(snapi.getSitePages(), homeTag['tags'])
-            globalutil.populateSourceUrl(pages)
-            pageTitle = homeTag['name']
-        else:
-            sitePages = snapi.getSitePages()
-            globalutil.populateSourceUrl(sitePages)
-            chartsPages = snapi.getChartsPages()
-            pages = sitePages + chartsPages
+    def get(self):
+        _LATEST_COUNT = 6
+        sitePages = snapi.getSitePages()
+        sitePages = [ page for page in sitePages if page['rank'] == 1 ]
+        homeTags = globalconfig.getHomeTags()
+        for homeTag in homeTags:
+            homeTag['pages'] = snapi.getPagesByTags(sitePages, homeTag['tags'])
+            homeTag['pages'].sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+            homeTag['pages'] = homeTag['pages'][:_LATEST_COUNT]
+            globalutil.populateSourceUrl(homeTag['pages'])
 
-            key = stringutil.transformSeparators('latest-show-type')
-            showType = self.request.cookies.get(key)
-            pageSince = None
-            if showType == 'today':
-                pageSince = dateutil.getTodayStartAs14(self.site.get('timezone', 0))
-            elif showType == 'unread':
-                key = stringutil.transformSeparators('latest-show-read')
-                pageSince = self.request.cookies.get(key)
-                latestHour = dateutil.getHoursAs14(1)
-                if not pageSince or pageSince > latestHour:
-                    pageSince = latestHour
-            if pageSince:
-                pages = [ page for page in pages if page.get('added') >= pageSince ]
-            key = stringutil.transformSeparators('latest-show-read')
-            self.response.set_cookie(key, dateutil.getDateAs14(), max_age=3600*24*7, path='/')
-        pages.sort(key=lambda page: page.get('published') or page['added'], reverse=True)
+        channels = globalconfig.getChannels()
+        for channel in channels:
+            slug = channel.get('slug')
+            channel['url'] = webapp2.uri_for('channel', channel=slug)
+
+            tags = channel.get('tags')
+            channel['pages'] = bs.getPagesByTags(sitePages, tags)
+
+            channel['pages'].sort(key=lambda page: page['added'], reverse=True)
+            channel['pages'] = channel['pages'][:_LATEST_COUNT]
+            globalutil.populateSourceUrl(channel['pages'])
+
         templateValues = {
-            'latesturl': webapp2.uri_for('latest'),
-            'pageTitle': pageTitle,
-            'pages': pages,
-            'showType': showType,
+            'homeTags': homeTags,
+            'channels': channels,
         }
         self.render(templateValues, 'latest.html')
 

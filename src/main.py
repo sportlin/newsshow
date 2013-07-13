@@ -51,7 +51,6 @@ webapp2.Route('/search/<keyword:.*>', handler=headline.handlers.Search, name='se
 ('/headline/add/', headline.handlersapi.HeadlineAddResponse),
 
 webapp2.Route('/latest/', handler=sourcenow.handlers.Latest, name='latest'),
-webapp2.Route('/latest/<scope>/', handler=sourcenow.handlers.Latest, name='latestScope'),
 webapp2.Route('/sites/', handler=sourcenow.handlers.Sites, name='sites'),
 webapp2.Route('/chartses/', handler=sourcenow.handlers.Chartses, name='chartses'),
 webapp2.Route('/charts/<charts:.+>', handler=sourcenow.handlers.Charts, name='charts'),

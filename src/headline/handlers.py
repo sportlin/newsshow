@@ -13,10 +13,6 @@ from hotword import hwapi
 from hotevent import heapi
 from . import bs
 
-def _getMenus():
-    menus = []
-    return menus
-
 class MyHandler(BasicHandler):
 
     def doRedirection(self):
@@ -46,7 +42,17 @@ class MyHandler(BasicHandler):
         self.i18n = globalconfig.getI18N()
 
     def prepareValues(self):
-        self.extraValues['extramenus'] = _getMenus()
+        menus = [
+            {
+                'name': self.i18n['headlineLatest'],
+                'url': webapp2.uri_for('latest'),
+            },
+            {
+                'name': self.i18n['headlineHot'],
+                'url': webapp2.uri_for('hot'),
+            },
+        ]
+        self.extraValues['extramenus'] = menus
 
 
 class Home(MyHandler):
