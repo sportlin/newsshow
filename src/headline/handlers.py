@@ -54,6 +54,12 @@ class MyHandler(BasicHandler):
         ]
         self.extraValues['extramenus'] = menus
 
+        channels = globalconfig.getChannels()
+        for channel in channels:
+            slug = channel.get('slug')
+            channel['url'] = webapp2.uri_for('channel', channel=slug)
+        self.extraValues['channelMenus'] = channels
+
 
 class Home(MyHandler):
 
@@ -63,8 +69,9 @@ class Home(MyHandler):
         channels = globalconfig.getChannels()
         for channel in channels:
             slug = channel.get('slug')
-            events = heapi.getEventPages(slug)
             channel['url'] = webapp2.uri_for('channel', channel=slug)
+
+            events = heapi.getEventPages(slug)
             for page in events:
                 if page['event']['exposed']:
                     eventUrlType = 'event'
@@ -123,16 +130,24 @@ class Hot(MyHandler):
 
     def get(self):
         siteEvents = heapi.getEventPages('sites')
-        siteEvents = [ page for page in siteEvents if page['event']['exposed'] ]
         for page in siteEvents:
-            page['event']['url'] = webapp2.uri_for('event', eventScope='sites', eventId=page['event']['id'])
+            if page['event']['exposed']:
+                eventUrlType = 'event'
+            else:
+                eventUrlType = 'hidden-event'
+            # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
+            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='sites', eventId=page['event']['id'])
         siteEvents.sort(key=lambda page: page['weight'], reverse=True)
         globalutil.populateSourceUrl(siteEvents)
 
         chartsEvents = heapi.getEventPages('chartses')
-        chartsEvents = [ page for page in chartsEvents if page['event']['exposed'] ]
         for page in chartsEvents:
-            page['event']['url'] = webapp2.uri_for('event', eventScope='chartses', eventId=page['event']['id'])
+            if page['event']['exposed']:
+                eventUrlType = 'event'
+            else:
+                eventUrlType = 'hidden-event'
+            # if eventId=0, error happens: 'Missing argument "eventId" to build URI.'
+            page['event']['url'] = webapp2.uri_for(eventUrlType, eventScope='chartses', eventId=page['event']['id'])
         chartsEvents.sort(key=lambda page: page['weight'], reverse=True)
 
         _LATEST_COUNT = 10
