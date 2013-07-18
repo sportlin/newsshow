@@ -88,10 +88,12 @@ class WordsAddResponse(webapp2.RequestHandler):
         key = data['key']
         if key == 'sites':
             sitePages = snapi.getSitePages()
-            matchedWords = _saveWords('sites', data['words'], sitePages)
+            matchedWords = _saveWords(key, data['words'], sitePages)
+            heapi.summarizeEvents(eventCriterion, key, matchedWords, sitePages, twitterAccount)
         elif key == 'chartses':
             chartsPages = snapi.getChartsPages()
-            matchedWords = _saveWords('chartses', data['words'], chartsPages)
+            matchedWords = _saveWords(key, data['words'], chartsPages)
+            heapi.summarizeEvents(eventCriterion, key, matchedWords, chartsPages, twitterAccount)
         else:
             channel = globalconfig.getChannel(key)
             if not channel:

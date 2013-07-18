@@ -8,7 +8,18 @@ from headline import datareceiver
 class LatestItem(configmanager.models.ConfigItem):
     pass
 
+class ChannelGroup(configmanager.models.ConfigItem):
+    pass
+
 cmapi.registerModel(LatestItem)
+cmapi.registerModel(ChannelGroup)
+
+
+def getChannelGroups(slug):
+    result = cmapi.getItemValue(slug, [], modelname=ChannelGroup)
+    if not result:
+        result = cmapi.getItemValue('default', [], modelname=ChannelGroup)
+    return result
 
 def receiveData(datasource, items):
     if datasource.get('charts'):

@@ -8,7 +8,7 @@ import globalutil
 
 from headline.handlers import MyHandler
 from hotword import hwapi
-from . import bs, snapi
+from . import bs, snapi, models
 
 class Channel(MyHandler):
 
@@ -21,10 +21,15 @@ class Channel(MyHandler):
 
         sitePages = snapi.getSitePages()
         tags = foundChannel.get('tags')
-        foundChannel['pages'] = bs.getPagesByTags(sitePages, tags)
+        channelPages = bs.getPagesByTags(sitePages, tags)
 
-        globalutil.populateSourceUrl(foundChannel['pages'])
-        foundChannel['pages'].sort(key=lambda page: page['added'], reverse=True)
+        foundChannel['groups'] = []
+        for group in models.getChannelGroups(channel):
+            group['pages'] = bs.getPagesByTags(channelPages, group['tags'])
+            globalutil.populateSourceUrl(group['pages'])
+            group['pages'].sort(key=lambda page: page['added'], reverse=True)
+            if group['pages']:
+                foundChannel['groups'].append(group)
 
         words, pages = hwapi.getWords(foundChannel['slug'])
         pages.sort(key=lambda page: page['weight'], reverse=True)
